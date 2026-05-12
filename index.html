@@ -2,864 +2,1678 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mandala-Mantra — Générateur</title>
+
+<!-- Viewport optimisé mobile (viewport-fit=cover pour notch iPhone) -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes">
+
+<!-- PWA / Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3e2d5e">
+<meta name="color-scheme" content="light">
+
+<!-- iOS : permettre l'installation à l'écran d'accueil en mode plein écran -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mandala+Mantra">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Icônes Apple Touch (écran d'accueil iOS) -->
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+
+<!-- Splash screens iOS (Apple Launch Images) -->
+<link rel="apple-touch-startup-image" href="icons/apple-splash-1170-2532.png"
+      media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/apple-splash-1284-2778.png"
+      media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/apple-splash-1125-2436.png"
+      media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/apple-splash-828-1792.png"
+      media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="icons/apple-splash-750-1334.png"
+      media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+
+<!-- Fonts Google (mises en cache par le service worker au 1er chargement en ligne) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Variables ── */
-:root {
-    --bg: #1a1a2e;
-    --surface: #16213e;
-    --surface2: #0f3460;
-    --accent: #e94560;
-    --gold: #d4a574;
-    --text: #e8e8e8;
-    --text2: #a0a0a0;
-    --border: #2a2a4a;
-    --success: #4caf50;
-    --sun: #ffd700;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  :root {
+    --bg: #f7f3ea;
+    --surface: #ffffff;
+    --ink: #1f1d2e;
+    --ink-2: #4a4660;
+    --ink-3: #8e8aa3;
+    --gold: #b48f46;
+    --gold-2: #d9b877;
+    --accent: #3e2d5e;
+    --accent-2: #5b4586;
+    --coeur: #7a3e3e;
+    --couronne: #3e5b7a;
+    --porte: #7a5b3e;
+    --border: #e2dccf;
+    --shadow: 0 2px 8px rgba(31, 29, 46, 0.08);
+    --shadow-lg: 0 8px 28px rgba(31, 29, 46, 0.12);
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
-    color: var(--text);
+    color: var(--ink);
+    line-height: 1.5;
     min-height: 100vh;
-}
-
-/* ── Header ── */
-.header {
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-    padding: 1.5rem 2rem;
-    border-bottom: 2px solid var(--gold);
-    text-align: center;
-}
-.header h1 {
-    font-size: 1.8rem;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-}
-.header p {
-    color: var(--text2);
-    margin-top: 0.3rem;
-    font-size: 0.9rem;
-}
-
-/* ── Layout ── */
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1.5rem;
-}
-.grid-2 {
+    /* Safe-area iPhone (notch / dynamic island) */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    /* Empêche le rebond de défilement iOS quand installé en standalone */
+    overscroll-behavior-y: contain;
+  }
+  /* Cible tactile minimale 44×44 sur les boutons et selects */
+  button, select, input { font-family: inherit; }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 1.6rem;
+    margin: 0;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  header .tagline {
+    font-style: italic;
+    color: var(--ink-3);
+    font-size: 0.85rem;
+  }
+  main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 420px 1fr;
     gap: 1.5rem;
-}
-@media (max-width: 1000px) {
-    .grid-2 { grid-template-columns: 1fr; }
-}
+    padding: 1.5rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+  }
+  /* ─── MOBILE (≤ 720 px) ─── */
+  @media (max-width: 720px) {
+    header { padding: 0.7rem 1rem; }
+    header h1 { font-size: 1.25rem; }
+    main { padding: 0.8rem; gap: 0.8rem; }
+    .form-panel {
+      position: static;          /* plus de sticky : prend la place naturelle */
+      max-height: none;
+      padding: 1rem;
+      overflow-y: visible;
+    }
+    .viz-panel { padding: 1rem; min-height: auto; }
+    .viz-header { gap: 0.4rem; }
+    .viz-header > * { flex: 1 1 auto; }
+    .format-toggle button,
+    .lang-toggle button,
+    .translit-toggle button { padding: 10px 12px; font-size: 0.88rem; }
+    .btn-export { padding: 10px 14px; min-height: 44px; }
+    .field-row { grid-template-columns: 22px 1fr 60px; gap: 6px; }
+    .field-row select {
+      padding: 10px 8px;        /* hauteur tactile confortable */
+      font-size: 16px;          /* iOS ne zoom plus si ≥ 16px */
+      min-height: 44px;
+    }
+    .double-select { grid-template-columns: 1fr 70px; gap: 6px; }
+    .btn-primary { padding: 14px; font-size: 1.1rem; min-height: 50px; }
+    .mandala-wrap { padding: 0.4rem; min-height: 320px; }
+    .mandala-wrap svg { max-width: 100%; max-height: none; }
+    .client-name-field { padding: 10px 12px; font-size: 16px; min-height: 44px; }
+  }
+  /* ─── TOUTES tablettes / iPad portrait ─── */
+  @media (max-width: 1024px) {
+    /* Empêche iOS Safari de zoomer quand on tape dans un input */
+    input, select, textarea { font-size: 16px; }
+  }
+  /* ─── MODE STANDALONE (app installée sur iOS) ─── */
+  @media all and (display-mode: standalone) {
+    header .tagline,
+    header h1 + .tagline { display: none; }       /* version compacte */
+  }
 
-/* ── Panels ── */
-.panel {
+  /* ═══ PANEL DE SAISIE ═══ */
+  .form-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.2rem;
-}
-.panel h2 {
-    color: var(--gold);
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-}
-
-/* ── Forms ── */
-.form-row {
-    display: grid;
-    grid-template-columns: 140px 120px 80px;
-    gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
-.form-row label {
-    color: var(--text2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    height: fit-content;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  .form-panel h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    margin: 0 0 0.3rem;
+    color: var(--accent);
+  }
+  .form-panel .subtitle {
     font-size: 0.8rem;
-}
-select, input[type="number"], input[type="text"], input[type="date"], input[type="time"] {
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.35rem 0.5rem;
+    color: var(--ink-3);
+    margin-bottom: 1.4rem;
+    font-style: italic;
+  }
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin: 1.2rem 0 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .field-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 60px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .field-row .field-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    color: var(--ink-3);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .field-row .field-label {
+    font-size: 0.8rem;
+    color: var(--ink-2);
+  }
+  .field-row select {
+    font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
-}
-select:focus, input:focus {
+    padding: 5px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    width: 100%;
+    cursor: pointer;
+  }
+  .field-row select:focus {
     outline: none;
     border-color: var(--gold);
-}
-.personal-info {
+  }
+  .double-select {
     display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 0.4rem 0.8rem;
-    margin-bottom: 1rem;
-    font-size: 0.85rem;
-}
-.personal-info label {
-    color: var(--text2);
-    font-size: 0.8rem;
-    text-align: right;
-}
-.personal-info input {
+    grid-template-columns: 1fr 60px;
+    gap: 6px;
+  }
+  .field-row.no-num { grid-template-columns: 1fr; }
+  .origine-label {
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-left: 36px;
+    margin-top: -2px;
+    margin-bottom: 8px;
+  }
+  .btn-primary {
+    display: block;
     width: 100%;
-}
-
-/* ── Buttons ── */
-.btn-group {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-.btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.btn-primary {
+    padding: 10px;
+    margin-top: 1.4rem;
     background: var(--accent);
     color: white;
-}
-.btn-primary:hover { background: #c73a50; }
-.btn-secondary {
-    background: var(--surface2);
-    color: var(--gold);
-    border: 1px solid var(--gold);
-}
-.btn-secondary:hover { background: var(--gold); color: var(--bg); }
-.btn-random {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-.btn-random:hover { background: var(--border); }
-
-/* ── Results Table ── */
-.results { display: none; margin-top: 1.5rem; }
-.results.visible { display: block; }
-.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8rem;
-}
-.results-table th {
-    background: var(--surface2);
-    color: var(--gold);
-    padding: 0.5rem;
-    text-align: left;
-    position: sticky;
-    top: 0;
-}
-.results-table td {
-    padding: 0.4rem 0.5rem;
-    border-bottom: 1px solid var(--border);
-}
-.results-table tr:hover {
-    background: rgba(233, 69, 96, 0.1);
-}
-.results-table .hebrew {
-    font-size: 1.1rem;
-    direction: rtl;
-    font-family: 'SBL Hebrew', 'Ezra SIL', 'Times New Roman', serif;
-}
-.total-row {
-    background: var(--surface2);
-    font-weight: bold;
-    color: var(--gold);
-}
-.calc-direct { color: var(--sun); }
-.calc-midpoint { color: var(--text2); }
-
-/* ── Details ── */
-.detail-section {
-    margin-top: 1rem;
-}
-.detail-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
-    overflow: hidden;
-}
-.detail-header {
-    padding: 0.6rem 0.8rem;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
     cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-2); }
+  .btn-link {
+    display: block;
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 6px;
+    background: transparent;
+    border: none;
+    color: var(--ink-3);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-style: italic;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+  }
+  .btn-link:hover { color: var(--gold); text-decoration-color: var(--gold); }
+
+  .client-name-field {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+  }
+
+  /* ═══ PANEL VISUALISATION ═══ */
+  .viz-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+  }
+  .viz-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
-}
-.detail-header:hover { background: var(--surface2); }
-.detail-header .arrow { transition: transform 0.2s; color: var(--text2); }
-.detail-header.open .arrow { transform: rotate(90deg); }
-.detail-body {
-    display: none;
-    padding: 0.8rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.8rem;
-    line-height: 1.6;
-}
-.detail-body.open { display: block; }
-.detail-body .label { color: var(--text2); }
-.detail-body .hebrew-large {
-    font-size: 1.6rem;
-    direction: rtl;
-    color: var(--gold);
-    font-family: 'SBL Hebrew', 'Ezra SIL', 'Times New Roman', serif;
-    margin: 0.3rem 0;
-}
-.detail-body .function {
-    color: var(--accent);
-    font-style: italic;
-    margin-top: 0.4rem;
-}
-
-/* ── SVG Zodiac ── */
-.svg-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 1rem;
-}
-.svg-container svg {
-    max-width: 100%;
-    height: auto;
-}
-
-/* ── Gematria Total ── */
-.gematria-total {
-    text-align: center;
-    font-size: 1.3rem;
-    color: var(--gold);
-    margin: 1rem 0;
-    padding: 0.8rem;
-    background: var(--surface2);
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .format-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
     border-radius: 6px;
-}
+    overflow: hidden;
+  }
+  .format-toggle button {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .format-toggle button.active {
+    background: var(--gold);
+    color: white;
+  }
+  .lang-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .lang-toggle button {
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-toggle button.active {
+    background: var(--accent);
+    color: white;
+  }
+  .translit-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .translit-toggle button {
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .translit-toggle button.active {
+    background: var(--coeur);
+    color: white;
+  }
+  .export-controls {
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+  .btn-export {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink-2);
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-export:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-export:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 
-/* ── Footer ── */
-.footer {
-    text-align: center;
+  .mandala-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem;
-    color: var(--text2);
+    background: #fbf9f3;
+    border-radius: var(--radius);
+    min-height: 560px;
+  }
+  .mandala-inner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .mandala-wrap svg {
+    width: 100%;
+    max-width: 820px;
+    max-height: 80vh;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .empty-state {
+    text-align: center;
+    color: var(--ink-3);
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    padding: 3rem 1rem;
+  }
+  .client-display {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--accent);
+    font-size: 1.15rem;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 0.4rem;
+  }
+
+  /* ═══ NOMS DU MANDALA (SVG) ═══ */
+  .nom-block { cursor: pointer; }
+  .nom-block:hover .vocalise,
+  .nom-block:hover .vocalise-curve,
+  .nom-block:hover .header-curve,
+  .nom-block:hover .header-plain,
+  .nom-block:hover .translit,
+  .nom-block:hover .porte-head {
+    fill: var(--accent);
+  }
+  /* Libellé combiné "N#. FONCTION" courbé (Couronne) */
+  .header-curve {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    fill: var(--ink-2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* Libellé combiné "N#. FONCTION" droit (Cœur) */
+  .header-plain {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    fill: var(--ink-2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* Chaque grapheme hébreu de la Couronne est rendu dans son propre <text>
+     (consonne + niqqud ensemble), positionné et tourné individuellement.
+     Cela contourne le rendu défectueux du textPath pour le RTL.
+     Les propriétés sont alignées sur .vocalise (Cœur / Portes) pour
+     obtenir un rendu identique : même graisse, même fluidité, mêmes
+     hints de rendu. */
+  .vocalise-graph {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 30px;
+    font-weight: 400;
+    fill: var(--ink);
+    direction: rtl;
+    unicode-bidi: plaintext;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+  }
+  /* Hover des graphèmes hébreux groupés dans un bloc couronne */
+  .nom-block.couronne:hover .vocalise-graph { fill: var(--accent); }
+  /* Hébreu vocalisé en texte droit (Cœur, Portes) */
+  .vocalise {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 30px;
+    fill: var(--ink);
+    text-anchor: middle;
+    direction: rtl;
+    unicode-bidi: plaintext;
+  }
+  .nom-block.coeur .vocalise { font-size: 36px; fill: var(--coeur); }
+  /* Translit (Couronne, Cœur, Portes) */
+  .translit {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-style: italic;
+    fill: var(--ink-2);
+    text-anchor: middle;
+    letter-spacing: 0.02em;
+  }
+  .nom-block.coeur .translit { font-size: 15px; }
+  /* En-tête Porte (bande basse) : "14. Nœud Nord" */
+  .porte-head {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-style: italic;
+    fill: var(--porte);
+    letter-spacing: 0.04em;
+  }
+  .porte-voc { font-size: 34px; }
+  .porte-trans { font-size: 15px; }
+  .section-ring {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+  .center-line {
+    stroke: var(--border);
+    stroke-width: 0.5;
+    stroke-dasharray: 3 3;
+  }
+  /* Flèche « début du mantra » entre N10 et N3 */
+  .start-arrow { fill: var(--gold); }
+  .start-arrow-line { stroke: var(--gold); stroke-width: 1.5; }
+  .start-arrow-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    fill: var(--gold);
+    letter-spacing: 0.06em;
+  }
+  .mandala-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    fill: var(--ink-3);
+    font-size: 13px;
+    text-anchor: middle;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* X-Y (numéro Shem72 + numéro de séquence), entre le libellé et l'hébreu */
+  .nom-id {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    fill: var(--accent);
+    letter-spacing: 0.03em;
+  }
+  /* Variante Cœur : couleur noir pur, police légèrement plus discrète que la Couronne */
+  .nom-block.coeur .nom-id {
+    fill: #000;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  /* Bloc des sommes gematria, coin haut-droit hors cercle (avec cadre) */
+  .gem-summary-frame {
+    fill: rgba(255,255,255,0.7);
+    stroke: #000;
+    stroke-width: 0.8;
+  }
+  .gem-summary-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    fill: #000;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .gem-summary-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 15px;
+    fill: var(--ink-2);
+    letter-spacing: 0.05em;
+  }
+  .gem-summary-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 600;
+    fill: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .gem-summary-total.gem-summary-label {
+    fill: var(--accent);
+    font-style: normal;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 15px;
+  }
+  .gem-summary-total.gem-summary-value {
+    fill: var(--accent);
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .gem-summary-rule { stroke: #000; stroke-width: 0.5; opacity: 0.4; }
+  .gem-summary-note {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-style: italic;
+    fill: var(--ink-3);
+  }
+
+  /* ═══ TOOLTIP ═══ */
+  .tooltip {
+    position: fixed;
+    background: var(--ink);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+    max-width: 280px;
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tt-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    color: var(--gold-2);
+    font-size: 0.9rem;
+  }
+  .tooltip .tt-heb {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 1.3rem;
+    direction: rtl;
+    unicode-bidi: plaintext;
+    margin: 3px 0;
+  }
+  .tooltip .tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+  }
+  .tooltip .tt-key { color: rgba(255,255,255,0.55); }
+
+  /* Footer sources */
+  footer {
+    padding: 1.5rem 2rem 2rem;
     font-size: 0.75rem;
-    margin-top: 2rem;
-}
+    color: var(--ink-3);
+    text-align: center;
+    font-style: italic;
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>MANDALA-MANTRA</h1>
-    <p>Shem HaMephorash — Seconde itération (14 Noms — mi-points solaires)</p>
-</div>
+<header>
+  <div>
+    <h1>Mandala-Mantra · Générateur</h1>
+    <div class="tagline">yatsav — Reboiser l'imaginaire</div>
+  </div>
+  <div class="tagline" style="text-align:right;">
+    V1 · Saisie manuelle<br>
+    <span style="font-size:0.75rem;">Répertoire Shem72 v2.10.7</span>
+  </div>
+</header>
 
-<div class="container">
+<main>
+  <!-- ═══ PANEL DE SAISIE ═══ -->
+  <aside class="form-panel">
+    <h2>Saisie du ciel de naissance</h2>
+    <div class="subtitle">Reportez ici les 14 positions lues sur l'image Astro Gold.</div>
 
-<div class="grid-2">
+    <input type="text" id="client-name" class="client-name-field" placeholder="Prénom / nom de la personne (optionnel)">
 
-<!-- ══ Formulaire ══ -->
-<div class="panel">
-    <h2>Positions célestes</h2>
+    <div class="section-label">Cœur</div>
+    <div id="section-coeur"></div>
 
-    <div class="personal-info">
-        <label>Nom</label>
-        <input type="text" id="inp-name" placeholder="Nom de la personne">
-        <label>Naissance</label>
-        <input type="date" id="inp-date">
-        <label>Heure</label>
-        <input type="time" id="inp-time">
-        <label>Lieu</label>
-        <input type="text" id="inp-location" placeholder="Ville, Pays">
+    <div class="section-label">Couronne</div>
+    <div id="section-couronne"></div>
+
+    <div class="section-label">Portes</div>
+    <div id="section-portes"></div>
+
+    <button class="btn-primary" id="btn-generate">Générer le Mandala-Mantra</button>
+    <button type="button" class="btn-link" id="btn-random">Produire un mandala-mantra aléatoire</button>
+  </aside>
+
+  <!-- ═══ PANEL VISUALISATION ═══ -->
+  <section class="viz-panel">
+    <div class="viz-header">
+      <div class="format-toggle" role="tablist">
+        <button class="active" data-format="standard">Standard · 10 Noms</button>
+        <button data-format="deluxe">Deluxe · 14 Noms</button>
+      </div>
+      <div class="lang-toggle" role="tablist" title="Langue d'affichage du mandala">
+        <button class="active" data-lang="fr">FR</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <div class="translit-toggle" role="tablist" title="Afficher ou masquer les translittérations">
+        <button class="active" data-translit="on">Avec translit</button>
+        <button data-translit="off">Épuré</button>
+      </div>
+      <div class="export-controls">
+        <button class="btn-export" id="btn-svg" disabled>⬇ SVG</button>
+        <button class="btn-export" id="btn-png" disabled>⬇ PNG</button>
+      </div>
     </div>
-
-    <div id="positions-form"></div>
-
-    <div class="btn-group">
-        <button class="btn btn-primary" onclick="calculate()">Calculer</button>
-        <button class="btn btn-random" onclick="randomPositions()">Positions aléatoires</button>
-        <button class="btn btn-random" onclick="randomNames()">14 Noms aléatoires</button>
-        <button class="btn btn-secondary" onclick="exportMarkdown()">Export Markdown</button>
+    <div class="mandala-wrap" id="mandala-wrap">
+      <div class="empty-state">
+        Saisissez les 14 positions puis cliquez « Générer ».<br>
+        <span style="font-size:0.9rem;">Le Cœur (2 Noms) et la Couronne (8 Noms) forment la version Standard.<br>
+        Les 4 Portes complètent la version Deluxe.</span>
+      </div>
     </div>
-</div>
+  </section>
+</main>
 
-<!-- ══ Visualisation SVG ══ -->
-<div class="panel">
-    <h2>Mandala-Mantra</h2>
-    <div class="svg-container" id="svg-mandala"></div>
-    <div id="mandala-footer" style="text-align:center; margin-top:0.8rem;"></div>
-</div>
+<div class="tooltip" id="tooltip"></div>
 
-</div><!-- grid-2 -->
-
-<!-- ══ Résultats ══ -->
-<div class="results" id="results-section">
-    <div class="panel">
-        <h2>Mandala-Mantra</h2>
-        <div id="results-header"></div>
-        <div class="gematria-total" id="gematria-total"></div>
-        <table class="results-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Corps céleste</th>
-                    <th>Calcul</th>
-                    <th>Degré</th>
-                    <th>Nom</th>
-                    <th>Hébreu</th>
-                    <th>Signe</th>
-                    <th>Voyelles</th>
-                    <th>Gém.</th>
-                </tr>
-            </thead>
-            <tbody id="results-tbody"></tbody>
-        </table>
-
-        <div class="detail-section" id="details-section"></div>
-    </div>
-</div>
-
-</div><!-- container -->
-
-<div class="footer">
-    Mandala-Mantra v2 — Généré le 2026-02-06 16:58 — Shem HaMephorash · 72 Noms · Gen 1:1
-</div>
+<footer>
+  Mandala-Mantra · Système Yatsav · Données sources : Shem72 Répertoire Complet v2.10.7
+</footer>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════
-// DONNÉES EMBARQUÉES
-// ══════════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════
+   DONNÉES DE RÉFÉRENCE — extraites du Répertoire Shem72 v2.10.7
+   ════════════════════════════════════════════════════════════════════ */
 
-const SHEM72 = [{"n": 1, "h": "והויה", "tr": "Vehuiah", "v": "e-e-i-a-a", "s": "Bélier", "se": "Aries", "ds": 0, "de": 5, "na": "Cardinal", "tm": 1, "ff": "Puissance de commencement. Impulsion première du Feu créateur.", "fe": "Power of Beginning. The primal impulse of Creative Fire."}, {"n": 2, "h": "יליאל", "tr": "Yeliel", "v": "e-i-a-a-e", "s": "Bélier", "se": "Aries", "ds": 5, "de": 10, "na": "Cardinal", "tm": 1, "ff": "Pacification du Feu. Stabilité de l'impulsion.", "fe": "Pacification of Fire. Stability of impulse."}, {"n": 3, "h": "סיטאל", "tr": "Sitael", "v": "i-a-a-e-o", "s": "Bélier", "se": "Aries", "ds": 10, "de": 15, "na": "Cardinal", "tm": 1, "ff": "Protection et affirmation. Consolidation des forces naissantes.", "fe": "Protection and affirmation. Consolidation of emerging forces."}, {"n": 4, "h": "עלמיה", "tr": "Elemiah", "v": "a-a-e-o-i", "s": "Bélier", "se": "Aries", "ds": 15, "de": 20, "na": "Cardinal", "tm": 1, "ff": "Endurance et persévérance vibratoire.", "fe": "Endurance and vibratory perseverance."}, {"n": 5, "h": "מהשיה", "tr": "Mahasiah", "v": "a-e-o-i-e", "s": "Bélier", "se": "Aries", "ds": 20, "de": 25, "na": "Cardinal", "tm": 1, "ff": "Rectification et purification de la voie.", "fe": "Rectification and purification of the path."}, {"n": 6, "h": "ללהאל", "tr": "Lelahel", "v": "e-o-i-e-a", "s": "Bélier", "se": "Aries", "ds": 25, "de": 30, "na": "Cardinal", "tm": 1, "ff": "Rayonnement, beauté, guérison lumineuse.", "fe": "Radiance, beauty, luminous healing."}, {"n": 7, "h": "אכאיה", "tr": "Achaiah", "v": "o-i-e-a-a", "s": "Taureau", "se": "Taurus", "ds": 30, "de": 35, "na": "Fixe", "tm": 1, "ff": "Patience cosmique, maturation des processus.", "fe": "Cosmic patience, maturation of processes."}, {"n": 8, "h": "כהתאל", "tr": "Kahetel", "v": "i-e-a-a-a", "s": "Taureau", "se": "Taurus", "ds": 35, "de": 40, "na": "Fixe", "tm": 1, "ff": "Fertilité, bénédiction, expansion vivante.", "fe": "Fertility, blessing, living expansion."}, {"n": 9, "h": "הזיאל", "tr": "Haziel", "v": "e-a-a-a-i", "s": "Taureau", "se": "Taurus", "ds": 40, "de": 45, "na": "Fixe", "tm": 1, "ff": "Grâce, pardon, restauration des liens.", "fe": "Grace, forgiveness, restoration of bonds."}, {"n": 10, "h": "אלדיה", "tr": "Aladiah", "v": "a-a-a-i-e", "s": "Taureau", "se": "Taurus", "ds": 45, "de": 50, "na": "Fixe", "tm": 1, "ff": "Guérison profonde.", "fe": "Deep healing."}, {"n": 11, "h": "לאויה", "tr": "Lauviah", "v": "a-a-i-e-e", "s": "Taureau", "se": "Taurus", "ds": 50, "de": 55, "na": "Fixe", "tm": 1, "ff": "Intuition protectrice.", "fe": "Protective intuition."}, {"n": 12, "h": "ההעיה", "tr": "Hahaiah", "v": "a-i-e-e-a", "s": "Taureau", "se": "Taurus", "ds": 55, "de": 60, "na": "Fixe", "tm": 1, "ff": "Refuge intérieur, rêve, vision subtile.", "fe": "Inner refuge, dream, subtle vision."}, {"n": 13, "h": "יזלאל", "tr": "Yezalel", "v": "i-e-e-a-a", "s": "Gémeaux", "se": "Gemini", "ds": 60, "de": 65, "na": "Mutable", "tm": 1, "ff": "Unité, réconciliation, clarté relationnelle.", "fe": "Unity, reconciliation, relational clarity."}, {"n": 14, "h": "מבהאל", "tr": "Mebahel", "v": "e-e-a-a-e", "s": "Gémeaux", "se": "Gemini", "ds": 65, "de": 70, "na": "Mutable", "tm": 1, "ff": "Vérité, justice, loyauté.", "fe": "Truth, justice, loyalty."}, {"n": 15, "h": "הריאל", "tr": "Hariel", "v": "e-a-a-e-e", "s": "Gémeaux", "se": "Gemini", "ds": 70, "de": 75, "na": "Mutable", "tm": 1, "ff": "Purification, élévation, scrutation.", "fe": "Purification, elevation, scrutiny."}, {"n": 16, "h": "הקמיה", "tr": "Hakamiah", "v": "a-a-e-e-i", "s": "Gémeaux", "se": "Gemini", "ds": 75, "de": 80, "na": "Mutable", "tm": 1, "ff": "Courage moral, droiture.", "fe": "Moral courage, uprightness."}, {"n": 17, "h": "לאויה", "tr": "Leuviah", "v": "a-e-e-i-a", "s": "Gémeaux", "se": "Gemini", "ds": 80, "de": 85, "na": "Mutable", "tm": 1, "ff": "Mémoire de l'âme, intégration.", "fe": "Memory of the soul, integration."}, {"n": 18, "h": "כליאל", "tr": "Keliel", "v": "e-e-i-a-a", "s": "Gémeaux", "se": "Gemini", "ds": 85, "de": 90, "na": "Mutable", "tm": 1, "ff": "Réparation, consolidation.", "fe": "Repair, consolidation."}, {"n": 19, "h": "לוויה", "tr": "Leuviah", "v": "e-e-i-a-a", "s": "Cancer", "se": "Cancer", "ds": 90, "de": 95, "na": "Cardinal", "tm": 2, "ff": "Équilibre karmique, ajustement.", "fe": "Karmic balance, adjustment."}, {"n": 20, "h": "פהליה", "tr": "Pahaliah", "v": "e-i-a-a-e", "s": "Cancer", "se": "Cancer", "ds": 95, "de": 100, "na": "Cardinal", "tm": 2, "ff": "Maîtrise spirituelle.", "fe": "Spiritual mastery."}, {"n": 21, "h": "נלכאל", "tr": "Nelkiel", "v": "i-a-a-e-o", "s": "Cancer", "se": "Cancer", "ds": 100, "de": 105, "na": "Cardinal", "tm": 2, "ff": "Vision élevée.", "fe": "Elevated vision."}, {"n": 22, "h": "יייאל", "tr": "Yeyayel", "v": "a-a-e-o-i", "s": "Cancer", "se": "Cancer", "ds": 105, "de": 110, "na": "Cardinal", "tm": 2, "ff": "Lumière dans les profondeurs.", "fe": "Light in the depths."}, {"n": 23, "h": "מלהאל", "tr": "Melahhel", "v": "a-e-o-i-e", "s": "Cancer", "se": "Cancer", "ds": 110, "de": 115, "na": "Cardinal", "tm": 2, "ff": "Restauration vitale.", "fe": "Vital restoration."}, {"n": 24, "h": "חהויה", "tr": "Haheuiah", "v": "e-o-i-e-a", "s": "Cancer", "se": "Cancer", "ds": 115, "de": 120, "na": "Cardinal", "tm": 2, "ff": "Abri dans la nuit intérieure.", "fe": "Shelter in the inner night."}, {"n": 25, "h": "נתהיה", "tr": "Nethahiah", "v": "o-i-e-a-a", "s": "Lion", "se": "Leo", "ds": 120, "de": 125, "na": "Fixe", "tm": 2, "ff": "Vision supérieure.", "fe": "Superior vision."}, {"n": 26, "h": "האאיה", "tr": "Haaiah", "v": "i-e-a-a-a", "s": "Lion", "se": "Leo", "ds": 125, "de": 130, "na": "Fixe", "tm": 2, "ff": "Stratégie juste.", "fe": "Just strategy."}, {"n": 27, "h": "ירתאל", "tr": "Yeratel", "v": "e-a-a-a-i", "s": "Lion", "se": "Leo", "ds": 130, "de": 135, "na": "Fixe", "tm": 2, "ff": "Libération.", "fe": "Liberation."}, {"n": 28, "h": "שאהיה", "tr": "Shaahiah", "v": "a-a-a-i-e", "s": "Lion", "se": "Leo", "ds": 135, "de": 140, "na": "Fixe", "tm": 2, "ff": "Vérité intérieure.", "fe": "Inner truth."}, {"n": 29, "h": "רייאל", "tr": "Reiyel", "v": "a-a-i-e-e", "s": "Lion", "se": "Leo", "ds": 140, "de": 145, "na": "Fixe", "tm": 2, "ff": "Ascension, élévation.", "fe": "Ascension, elevation."}, {"n": 30, "h": "אומאל", "tr": "Omael", "v": "a-i-e-e-a", "s": "Lion", "se": "Leo", "ds": 145, "de": 150, "na": "Fixe", "tm": 2, "ff": "Multiplication, fécondité.", "fe": "Multiplication, fecundity."}, {"n": 31, "h": "לכבאל", "tr": "Lekabel", "v": "i-e-e-a-a", "s": "Vierge", "se": "Virgo", "ds": 150, "de": 155, "na": "Mutable", "tm": 2, "ff": "Résolution, talent créatif.", "fe": "Resolution, creative talent."}, {"n": 32, "h": "ושריה", "tr": "Vashariah", "v": "e-e-a-a-e", "s": "Vierge", "se": "Virgo", "ds": 155, "de": 160, "na": "Mutable", "tm": 2, "ff": "Clémence, noblesse intérieure.", "fe": "Clemency, inner nobility."}, {"n": 33, "h": "יחויה", "tr": "Yechuiah", "v": "e-a-a-e-e", "s": "Vierge", "se": "Virgo", "ds": 160, "de": 165, "na": "Mutable", "tm": 2, "ff": "Connaissance des lois cosmiques.", "fe": "Knowledge of cosmic laws."}, {"n": 34, "h": "להחיה", "tr": "Lehahiah", "v": "a-a-e-e-i", "s": "Vierge", "se": "Virgo", "ds": 165, "de": 170, "na": "Mutable", "tm": 2, "ff": "Loyauté, service, confiance dans l'ordre cosmique.", "fe": "Loyalty, service, trust in cosmic order."}, {"n": 35, "h": "כוקיה", "tr": "Kevakiah", "v": "a-e-e-i-a", "s": "Vierge", "se": "Virgo", "ds": 170, "de": 175, "na": "Mutable", "tm": 2, "ff": "Réconciliation, apaisement.", "fe": "Reconciliation, appeasement."}, {"n": 36, "h": "מנדאל", "tr": "Mendael", "v": "e-e-i-a-a", "s": "Vierge", "se": "Virgo", "ds": 175, "de": 180, "na": "Mutable", "tm": 2, "ff": "Discernement, choix juste.", "fe": "Discernment, just choice."}, {"n": 37, "h": "אניאל", "tr": "Aniel", "v": "e-e-i-a-a", "s": "Balance", "se": "Libra", "ds": 180, "de": 185, "na": "Cardinal", "tm": 3, "ff": "Percée de la conscience nouvelle.", "fe": "Breakthrough of new consciousness."}, {"n": 38, "h": "חעמיה", "tr": "Haamiah", "v": "e-i-a-a-e", "s": "Balance", "se": "Libra", "ds": 185, "de": 190, "na": "Cardinal", "tm": 3, "ff": "Amour sacré, rituel, vérité intérieure.", "fe": "Sacred love, ritual, inner truth."}, {"n": 39, "h": "רהעאל", "tr": "Rehael", "v": "i-a-a-e-o", "s": "Balance", "se": "Libra", "ds": 190, "de": 195, "na": "Cardinal", "tm": 3, "ff": "Soumission sacrée, écoute profonde.", "fe": "Sacred submission, deep listening."}, {"n": 40, "h": "ייזאל", "tr": "Yeyazel", "v": "a-a-e-o-i", "s": "Balance", "se": "Libra", "ds": 195, "de": 200, "na": "Cardinal", "tm": 3, "ff": "Consolation, allégresse.", "fe": "Consolation, joy."}, {"n": 41, "h": "הההאל", "tr": "Hahahel", "v": "a-e-o-i-e", "s": "Balance", "se": "Libra", "ds": 200, "de": 205, "na": "Cardinal", "tm": 3, "ff": "Mission spirituelle, vocation.", "fe": "Spiritual mission, vocation."}, {"n": 42, "h": "מיכאל", "tr": "Mikhael", "v": "e-o-i-e-a", "s": "Balance", "se": "Libra", "ds": 205, "de": 210, "na": "Cardinal", "tm": 3, "ff": "Autorité juste, pouvoir sacré.", "fe": "Just authority, sacred power."}, {"n": 43, "h": "ווליה", "tr": "Veuliah", "v": "o-i-e-a-a", "s": "Scorpion", "se": "Scorpio", "ds": 210, "de": 215, "na": "Fixe", "tm": 3, "ff": "Prospérité, abondance intérieure.", "fe": "Prosperity, inner abundance."}, {"n": 44, "h": "ילהאל", "tr": "Yelahel", "v": "i-e-a-a-a", "s": "Scorpion", "se": "Scorpio", "ds": 215, "de": 220, "na": "Fixe", "tm": 3, "ff": "Force combattante, bravoure.", "fe": "Fighting strength, bravery."}, {"n": 45, "h": "סאליה", "tr": "Sealiah", "v": "e-a-a-a-i", "s": "Scorpion", "se": "Scorpio", "ds": 220, "de": 225, "na": "Fixe", "tm": 3, "ff": "Moteur de vie, volonté.", "fe": "Life engine, will."}, {"n": 46, "h": "עריאל", "tr": "Ariel", "v": "a-a-a-i-e", "s": "Scorpion", "se": "Scorpio", "ds": 225, "de": 230, "na": "Fixe", "tm": 3, "ff": "Révélation, découverte.", "fe": "Revelation, discovery."}, {"n": 47, "h": "עשליה", "tr": "Ashaliah", "v": "a-a-i-e-e", "s": "Scorpion", "se": "Scorpio", "ds": 230, "de": 235, "na": "Fixe", "tm": 3, "ff": "Contemplation, élévation.", "fe": "Contemplation, elevation."}, {"n": 48, "h": "מיהאל", "tr": "Mihael", "v": "a-i-e-e-a", "s": "Scorpion", "se": "Scorpio", "ds": 235, "de": 240, "na": "Fixe", "tm": 3, "ff": "Fécondité, harmonie conjugale.", "fe": "Fecundity, conjugal harmony."}, {"n": 49, "h": "והואל", "tr": "Vehuel", "v": "i-e-e-a-a", "s": "Sagittaire", "se": "Sagittarius", "ds": 240, "de": 245, "na": "Mutable", "tm": 3, "ff": "Élévation, grandeur d'âme.", "fe": "Elevation, greatness of soul."}, {"n": 50, "h": "דניאל", "tr": "Daniel", "v": "e-e-a-a-e", "s": "Sagittaire", "se": "Sagittarius", "ds": 245, "de": 250, "na": "Mutable", "tm": 3, "ff": "Vision profonde, loyauté intérieure.", "fe": "Deep vision, inner loyalty."}, {"n": 51, "h": "החשיה", "tr": "Hahasiah", "v": "e-a-a-e-e", "s": "Sagittaire", "se": "Sagittarius", "ds": 250, "de": 255, "na": "Mutable", "tm": 3, "ff": "Médecine universelle, sagesse.", "fe": "Universal medicine, wisdom."}, {"n": 52, "h": "עממיה", "tr": "Amamiah", "v": "a-a-e-e-i", "s": "Sagittaire", "se": "Sagittarius", "ds": 255, "de": 260, "na": "Mutable", "tm": 3, "ff": "Expiation, libération karmique.", "fe": "Expiation, karmic liberation."}, {"n": 53, "h": "ננאאל", "tr": "Nanael", "v": "a-e-e-i-a", "s": "Sagittaire", "se": "Sagittarius", "ds": 260, "de": 265, "na": "Mutable", "tm": 3, "ff": "Connaissance spirituelle, inspiration.", "fe": "Spiritual knowledge, inspiration."}, {"n": 54, "h": "ניתאל", "tr": "Nithael", "v": "e-e-i-a-a", "s": "Sagittaire", "se": "Sagittarius", "ds": 265, "de": 270, "na": "Mutable", "tm": 3, "ff": "Légitimité, beauté éternelle.", "fe": "Legitimacy, eternal beauty."}, {"n": 55, "h": "מבהיה", "tr": "Mebahiah", "v": "e-e-i-a-a", "s": "Capricorne", "se": "Capricorn", "ds": 270, "de": 275, "na": "Cardinal", "tm": 4, "ff": "Lucidité morale, consolation.", "fe": "Moral lucidity, consolation."}, {"n": 56, "h": "פויאל", "tr": "Poyael", "v": "e-i-a-a-e", "s": "Capricorne", "se": "Capricorn", "ds": 275, "de": 280, "na": "Cardinal", "tm": 4, "ff": "Fortune, talent, modestie.", "fe": "Fortune, talent, modesty."}, {"n": 57, "h": "נממיה", "tr": "Nemamiah", "v": "i-a-a-e-o", "s": "Capricorne", "se": "Capricorn", "ds": 280, "de": 285, "na": "Cardinal", "tm": 4, "ff": "Discernement, prospérité juste.", "fe": "Discernment, just prosperity."}, {"n": 58, "h": "יילאל", "tr": "Yeialel", "v": "a-a-e-o-i", "s": "Capricorne", "se": "Capricorn", "ds": 285, "de": 290, "na": "Cardinal", "tm": 4, "ff": "Force mentale, guérison.", "fe": "Mental strength, healing."}, {"n": 59, "h": "הרחאל", "tr": "Harahel", "v": "a-e-o-i-e", "s": "Capricorne", "se": "Capricorn", "ds": 290, "de": 295, "na": "Cardinal", "tm": 4, "ff": "Richesse intellectuelle, fécondité de l'esprit.", "fe": "Intellectual richness, fecundity of mind."}, {"n": 60, "h": "מצראל", "tr": "Mitzrael", "v": "e-o-i-e-a", "s": "Capricorne", "se": "Capricorn", "ds": 295, "de": 300, "na": "Cardinal", "tm": 4, "ff": "Guérison, libération des mémoires, fidélité.", "fe": "Healing, liberation of memories, fidelity."}, {"n": 61, "h": "ומבאל", "tr": "Umabel", "v": "o-i-e-a-a", "s": "Verseau", "se": "Aquarius", "ds": 300, "de": 305, "na": "Fixe", "tm": 4, "ff": "Amitié, affinités profondes.", "fe": "Friendship, deep affinities."}, {"n": 62, "h": "יההאל", "tr": "Yehael", "v": "i-e-a-a-a", "s": "Verseau", "se": "Aquarius", "ds": 305, "de": 310, "na": "Fixe", "tm": 4, "ff": "Savoir intérieur, parole juste, sagesse.", "fe": "Inner knowing, just speech, wisdom."}, {"n": 63, "h": "ענואל", "tr": "Anuel", "v": "e-a-a-a-i", "s": "Verseau", "se": "Aquarius", "ds": 310, "de": 315, "na": "Fixe", "tm": 4, "ff": "Unité dans la diversité, perception cosmique.", "fe": "Unity in diversity, cosmic perception."}, {"n": 64, "h": "מחיאל", "tr": "Mehiel", "v": "a-a-a-i-e", "s": "Verseau", "se": "Aquarius", "ds": 315, "de": 320, "na": "Fixe", "tm": 4, "ff": "Vivification, inspiration créatrice.", "fe": "Vivification, creative inspiration."}, {"n": 65, "h": "דמביה", "tr": "Damabiah", "v": "a-a-i-e-e", "s": "Verseau", "se": "Aquarius", "ds": 320, "de": 325, "na": "Fixe", "tm": 4, "ff": "Source de sagesse, fontaine intérieure.", "fe": "Source of wisdom, inner fountain."}, {"n": 66, "h": "מנקאל", "tr": "Manakel", "v": "a-i-e-e-a", "s": "Verseau", "se": "Aquarius", "ds": 325, "de": 330, "na": "Fixe", "tm": 4, "ff": "Connaissance du bien et du mal, discernement.", "fe": "Knowledge of good and evil, discernment."}, {"n": 67, "h": "איעאל", "tr": "Eyael", "v": "i-e-e-a-a", "s": "Poissons", "se": "Pisces", "ds": 330, "de": 335, "na": "Mutable", "tm": 4, "ff": "Sublimation, transformation, joie.", "fe": "Sublimation, transformation, joy."}, {"n": 68, "h": "חבויה", "tr": "Habuhiah", "v": "e-e-a-a-e", "s": "Poissons", "se": "Pisces", "ds": 335, "de": 340, "na": "Mutable", "tm": 4, "ff": "Guérison, fertilité, abondance.", "fe": "Healing, fertility, abundance."}, {"n": 69, "h": "ראהאל", "tr": "Rahael", "v": "e-a-a-e-e", "s": "Poissons", "se": "Pisces", "ds": 340, "de": 345, "na": "Mutable", "tm": 4, "ff": "Retrouvailles, restitution.", "fe": "Reunion, restitution."}, {"n": 70, "h": "יבמיה", "tr": "Yabamiah", "v": "a-a-e-e-i", "s": "Poissons", "se": "Pisces", "ds": 345, "de": 350, "na": "Mutable", "tm": 4, "ff": "Genèse, régénération cosmique.", "fe": "Genesis, cosmic regeneration."}, {"n": 71, "h": "הייאל", "tr": "Hayael", "v": "a-e-e-i-a", "s": "Poissons", "se": "Pisces", "ds": 350, "de": 355, "na": "Mutable", "tm": 4, "ff": "Valeur guerrière divine, courage.", "fe": "Divine warrior valor, courage."}, {"n": 72, "h": "מומיה", "tr": "Mumiah", "v": "e-e-i-a-a", "s": "Poissons", "se": "Pisces", "ds": 355, "de": 360, "na": "Mutable", "tm": 4, "ff": "Achèvement, renaissance, fin du cycle.", "fe": "Completion, rebirth, end of cycle."}];
-
-const SIGNS = [
-    {fr: "Bélier", en: "Aries", deg: 0},
-    {fr: "Taureau", en: "Taurus", deg: 30},
-    {fr: "Gémeaux", en: "Gemini", deg: 60},
-    {fr: "Cancer", en: "Cancer", deg: 90},
-    {fr: "Lion", en: "Leo", deg: 120},
-    {fr: "Vierge", en: "Virgo", deg: 150},
-    {fr: "Balance", en: "Libra", deg: 180},
-    {fr: "Scorpion", en: "Scorpio", deg: 210},
-    {fr: "Sagittaire", en: "Sagittarius", deg: 240},
-    {fr: "Capricorne", en: "Capricorn", deg: 270},
-    {fr: "Verseau", en: "Aquarius", deg: 300},
-    {fr: "Poissons", en: "Pisces", deg: 330}
+// 72 trigrammes (index 0 = Nom #1)
+var NAMES_RAW = [
+  'והו','ילי','סיט','עלמ','מהש','ללה','אכא','כהת',
+  'הזי','אלד','לאו','ההע','יזל','מבה','הרי','הקמ',
+  'לאו','כלי','לוו','פהל','נלכ','ייי','מלה','חהו',
+  'נתה','האא','ירת','שאה','ריי','אומ','לכב','ושר',
+  'יחו','להח','כוק','מנד','אני','חעמ','רהע','ייז',
+  'ההה','מיכ','וול','ילה','סאל','ערי','עשל','מיה',
+  'והו','דני','החש','עממ','ננא','נית','מבה','פוי',
+  'נממ','ייל','הרח','מצר','ומב','יהה','ענו','מחי',
+  'דמב','מנק','איע','חבו','ראה','יבמ','היי','מומ'
 ];
 
-const BODIES = [
-    {id: "Soleil", fr: "Soleil (Source — Être)", en: "Sun"},
-    {id: "Lune", fr: "Lune (Réceptacle — Présence)", en: "Moon"},
-    {id: "Mercure", fr: "Mercure (Intelligence — Parole vivante)", en: "Mercury"},
-    {id: "Vénus", fr: "Vénus (Beauté — Cohérence affective)", en: "Venus"},
-    {id: "Mars", fr: "Mars (Action — Puissance dirigée)", en: "Mars"},
-    {id: "Jupiter", fr: "Jupiter (Expansion — Sagesse)", en: "Jupiter"},
-    {id: "Saturne", fr: "Saturne (Structure — Intégrité)", en: "Saturn"},
-    {id: "Uranus", fr: "Uranus (Libération — Mutation)", en: "Uranus"},
-    {id: "Neptune", fr: "Neptune (Transparence — Fusion sacrée)", en: "Neptune"},
-    {id: "Pluton", fr: "Pluton (Transmutation — Pouvoir profond)", en: "Pluto"},
-    {id: "Noeud Nord", fr: "Noeud Nord (Direction évolutive)", en: "North Node"},
-    {id: "Noeud Sud", fr: "Noeud Sud (Héritage karmique)", en: "South Node"},
-    {id: "Ascendant", fr: "Ascendant (Masque — Interface au monde)", en: "Ascendant"},
-    {id: "MC", fr: "Milieu du Ciel (Vocation — Sommet)", en: "Midheaven"}
+// 18 séquences vocaliques × 4 positions (Printemps / Été / Automne / Hiver)
+// Distribution : Séq N → Noms N, N+18, N+36, N+54
+var SEQS = [
+  ['וְהֵוִיָהָ','לְוֵוִיָהָ','אְנֵיִאָלָ','מְבֵּהִיָהָ'],
+  ['יֵלִיָאָלֶ','פֵּהִלָיָהֶ','חֵעִמָיָהֶ','פֵּוִיָאָלֶ'],
+  ['סִיָטָאֶלֹ','נִלָכָּאֶלֹ','רִהָעָאֶלֹ','נִמָמָיֶהֹ'],
+  ['עָלָמֶיֹהִ','יָיָיֶאֹלִ','יָיָזֶאֹלִ','יָיָלֶאֹלִ'],
+  ['מָהֶשֹיִהֵ','מָלֶהֹאִלֵ','הָהֶהֹאִלֵ','הָרֶחֹאִלֵ'],
+  ['לֶלֹהִאֵלַ','חֶהֹוִיֵהַ','מֶיֹכִּאֵלַ','מֶצֹרִאֵלַ'],
+  ['אֹכִּאֵיַהָ','נֹתִהֵיַהָ','וֹוִלֵיַהָ','וֹמִבֵּאַלָ'],
+  ['כִּהֵתַאָלַ','הִאֵאַיָהַ','יִלֵהַאָלַ','יִהֵהַאָלַ'],
+  ['הֵזַיָאַלִ','יֵרַתָאַלִ','סֵאַלָיַהִ','עֵנַוָאַלִ'],
+  ['אַלָדַיִהְ','שַאָהַיִהְ','עַרָיַאִלְ','מַחָיַאִלְ'],
+  ['לָאַוִיְהֵ','רָיַיִאְלֵ','עָשַלִיְהֵ','דָמַבִּיְהֵ'],
+  ['הַהִעְיֵהָ','אַוִמְאֵלָ','מַיִהְאֵלָ','מַנִקְאֵלָ'],
+  ['יִזְלֵאָלָ','לִכְּבֵּאָלָ','וִהְוֵאָלָ','אִיְעֵאָלָ'],
+  ['מְבֵּהָאָלֶ','וְשֵרָיָהֶ','דְנֵיָאָלֶ','חְבֵּוָיָהֶ'],
+  ['הֵרָיָאֶלְ','יֵחָוָיֶהְ','הֵחָשָיֶהְ','רֵאָהָאֶלְ'],
+  ['הָקָמֶיְהֵ','לָהָחֶיְהֵ','עָמָמֶיְהֵ','יָבָּמֶיְהֵ'],
+  ['לָאֶוְיֵהִ','כָּוֶקְיֵהִ','נָנֶאְאֵלִ','הָיֶיְאֵלִ'],
+  ['כֶּלְיֵאִלָ','מֶנְדֵאִלָ','נֶיְתֵאִלָ','מֶוְמֵיִהָ']
 ];
 
-const SIGN_SYMBOLS = ["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
+// Suffixes El/Yah par Nom (index 0 = Nom #1)
+var SUFFIXES = [
+  'Yah','El','El','Yah','Yah','El','Yah','El','El','Yah','Yah','Yah','El','El','El','Yah','Yah','El',
+  'Yah','Yah','El','El','El','Yah','Yah','Yah','El','Yah','El','El','El','Yah','Yah','Yah','Yah','El',
+  'El','Yah','El','El','El','El','Yah','El','Yah','El','Yah','El','El','El','Yah','Yah','El','El',
+  'Yah','El','Yah','El','El','El','El','El','El','El','Yah','El','El','Yah','El','Yah','El','Yah'
+];
 
-let currentResults = null;
+// Translittérations syllabiques — version française (Système Lishavan)
+var TRANSLIT_FR = [
+  "Ve-Hé-Vi-Yâ-Hâ","Yé-Li-Yâ-'â-Lè","Si-Yâ-Tâ-'è-Lo","'â-Lâ-Mè-Yo-Hi","Mâ-Hè-Sho-Yi-Hé","Lè-Lo-Hi-'é-La",
+  "'o-Ki-'é-Ya-Hâ","Ki-Hé-Ta-'â-La","Hé-Za-Yâ-'a-Li","'a-Lâ-Da-Yi-He","Lâ-'a-Vi-Ye-Hé","Ha-Hi-'e-Yé-Hâ",
+  "Yi-Ze-Lé-'â-Lâ","Me-Bé-Hâ-'â-Lè","Hé-Râ-Yâ-'è-Le","Hâ-Qâ-Mè-Ye-Hé","Lâ-'è-Ve-Yé-Hi","Kè-Le-Yé-'i-Lâ",
+  "Le-Vé-Vi-Yâ-Hâ","Pé-Hi-Lâ-Yâ-Hè","Ni-Lâ-Kâ-'è-Lo","Yâ-Yâ-Yè-'o-Li","Mâ-Lè-Ho-'i-Lé","Ḥè-Ho-Vi-Yé-Ha",
+  "No-Ti-Hé-Ya-Hâ","Hi-'é-'a-Yâ-Ha","Yé-Ra-Tâ-'a-Li","Sha-'â-Ha-Yi-He","Râ-Ya-Yi-'e-Lé","'a-Vi-Me-'é-Lâ",
+  "Li-Ké-Bé-'â-Lâ","Ve-Shé-Râ-Yâ-Hè","Yé-Ḥâ-Vâ-Yè-He","Lâ-Hâ-Ḥè-Ye-Hé","Kâ-Vè-Qe-Yé-Hi","Mè-Ne-Dé-'i-Lâ",
+  "'e-Né-Yi-'â-Lâ","Ḥé-'i-Mâ-Yâ-Hè","Ri-Hâ-'â-'è-Lo","Yâ-Yâ-Zè-'o-Li","Hâ-Hè-Ho-'i-Lé","Mè-Yo-Ki-'é-La",
+  "Vo-Vi-Lé-Ya-Hâ","Yi-Lé-Ha-'â-La","Sé-'a-Lâ-Ya-Hi","'a-Râ-Ya-'i-Le","'â-Sha-Li-Ye-Hé","Ma-Yi-He-'é-Lâ",
+  "Vi-He-Vé-'â-Lâ","De-Né-Yâ-'â-Lè","Hé-Ḥâ-Shâ-Yè-He","'â-Mâ-Mè-Ye-Hé","Nâ-Nè-'e-'é-Li","Nè-Ye-Té-'i-Lâ",
+  "Me-Bé-Hi-Yâ-Hâ","Pé-Vi-Yâ-'â-Lè","Ni-Mâ-Mâ-Yè-Ho","Yâ-Yâ-Lè-'o-Li","Hâ-Rè-Ḥo-'i-Lé","Mè-Tso-Ri-'é-La",
+  "Vo-Mi-Bé-'a-Lâ","Yi-Hé-Ha-'â-La","'é-Na-Vâ-'a-Li","Ma-Ḥâ-Ya-'i-Le","Dâ-Ma-Bi-Ye-Hé","Ma-Ni-Qe-'é-Lâ",
+  "'i-Ye-'é-'â-Lâ","Ḥe-Bé-Vâ-Yâ-Hè","Ré-'â-Hâ-'è-Le","Yâ-Bâ-Mè-Ye-Hé","Hâ-Yè-Ye-'é-Li","Mè-Ve-Mé-Yi-Hâ"
+];
 
-// ══════════════════════════════════════════════════════════════════════════
-// CALCUL
-// ══════════════════════════════════════════════════════════════════════════
+// Translittérations syllabiques — version anglaise
+// À remplacer par les valeurs fournies ultérieurement. Valeurs vides pour l'instant :
+// en mode EN, la translittération ne s'affiche pas tant que la liste est vide.
+var TRANSLIT_EN = new Array(72).fill('');
 
-function signDegreeToAbsolute(signFr, degreeInSign) {
-    const sign = SIGNS.find(s => s.fr === signFr);
-    if (!sign) return 0;
-    return (sign.deg + parseFloat(degreeInSign)) % 360;
-}
+var SIGNES = [
+  {nom:'Bélier',    sym:'♈', elem:'Feu',   modal:'Cardinal'},
+  {nom:'Taureau',   sym:'♉', elem:'Terre', modal:'Fixe'},
+  {nom:'Gémeaux',   sym:'♊', elem:'Air',   modal:'Mutable'},
+  {nom:'Cancer',    sym:'♋', elem:'Eau',   modal:'Cardinal'},
+  {nom:'Lion',      sym:'♌', elem:'Feu',   modal:'Fixe'},
+  {nom:'Vierge',    sym:'♍', elem:'Terre', modal:'Mutable'},
+  {nom:'Balance',   sym:'♎', elem:'Air',   modal:'Cardinal'},
+  {nom:'Scorpion',  sym:'♏', elem:'Eau',   modal:'Fixe'},
+  {nom:'Sagittaire',sym:'♐', elem:'Feu',   modal:'Mutable'},
+  {nom:'Capricorne',sym:'♑', elem:'Terre', modal:'Cardinal'},
+  {nom:'Verseau',   sym:'♒', elem:'Air',   modal:'Fixe'},
+  {nom:'Poissons',  sym:'♓', elem:'Eau',   modal:'Mutable'}
+];
 
-function absoluteToSignDegree(absDeg) {
-    absDeg = ((absDeg % 360) + 360) % 360;
-    const idx = Math.floor(absDeg / 30);
-    const deg = absDeg - (idx * 30);
-    return { sign: SIGNS[idx].fr, signEn: SIGNS[idx].en, degree: deg };
-}
+var SAISONS = ['Printemps','Été','Automne','Hiver'];
 
-function midpoint(degA, degB) {
-    const diff = Math.abs(degA - degB);
-    let mid;
-    if (diff > 180) {
-        mid = (degA + degB) / 2 + 180;
-    } else {
-        mid = (degA + degB) / 2;
-    }
-    return ((mid % 360) + 360) % 360;
-}
-
-function degreeToShem72(absDeg) {
-    absDeg = ((absDeg % 360) + 360) % 360;
-    return Math.floor(absDeg / 5) + 1;
-}
-
-function getShem72(number) {
-    return SHEM72.find(s => s.n === number) || null;
-}
-
-// Calcul gématria depuis les consonnes hébraïques
-const CONSONANTS = {
-    'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,
-    'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,
-    'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400
+// Valeurs gematria des 22 lettres hébraïques (formes finales incluses).
+var GEM = {
+  'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,
+  'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,
+  'ק':100,'ר':200,'ש':300,'ת':400,
+  'ך':20,'ם':40,'ן':50,'ף':80,'ץ':90
 };
+// Valeur gematria des suffixes angéliques El / Yah.
+var GEM_SUFFIX = { 'El': 31, 'Yah': 15 };
 
-function wordGematria(word) {
-    let total = 0;
-    for (const c of word) {
-        total += CONSONANTS[c] || 0;
-    }
-    return total;
+// Somme gematria d'un trigramme (3 lettres, sans suffixe).
+function gemTrigramme(text) {
+  var s = 0;
+  for (var i = 0; i < text.length; i++) s += (GEM[text[i]] || 0);
+  return s;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// FORMULAIRE
-// ══════════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════
+   STRUCTURE DES 14 CHAMPS
+   ════════════════════════════════════════════════════════════════════ */
+
+// Ordre : Cœur (1-2), Couronne (3-10), Portes (11-14)
+var CHAMPS = [
+  // --- Cœur ---
+  {idx:0,  zone:'coeur',    label:'Soleil',              origine:'Nom 1'},
+  {idx:1,  zone:'coeur',    label:'Soleil – Lune',       origine:'Nom 2'},
+  // --- Couronne ---
+  {idx:2,  zone:'couronne', label:'Soleil – Mercure',    origine:'Nom 3'},
+  {idx:3,  zone:'couronne', label:'Soleil – Vénus',      origine:'Nom 4'},
+  {idx:4,  zone:'couronne', label:'Soleil – Mars',       origine:'Nom 5'},
+  {idx:5,  zone:'couronne', label:'Soleil – Jupiter',    origine:'Nom 6'},
+  {idx:6,  zone:'couronne', label:'Soleil – Saturne',    origine:'Nom 7'},
+  {idx:7,  zone:'couronne', label:'Soleil – Uranus',     origine:'Nom 8'},
+  {idx:8,  zone:'couronne', label:'Soleil – Neptune',    origine:'Nom 9'},
+  {idx:9,  zone:'couronne', label:'Soleil – Pluton',     origine:'Nom 10'},
+  // --- Portes ---
+  {idx:10, zone:'porte',    label:'Soleil – Ascendant',  origine:'Nom 11'},
+  {idx:11, zone:'porte',    label:'Soleil – Nœud Sud',   origine:'Nom 12'},
+  {idx:12, zone:'porte',    label:'Soleil – MC',         origine:'Nom 13'},
+  {idx:13, zone:'porte',    label:'Soleil – Nœud Nord',  origine:'Nom 14'}
+];
+
+/* ════════════════════════════════════════════════════════════════════
+   LOGIQUE DE CORRESPONDANCE POSITION → NOM
+   Bélier 0-5° = Nom 1, Bélier 5-10° = Nom 2, …, Poissons 25-30° = Nom 72
+   ════════════════════════════════════════════════════════════════════ */
+
+function posToId(signeIdx, pos) {
+  // signeIdx : 0-11 (Bélier à Poissons)
+  // pos : 1-6
+  return signeIdx * 6 + pos;
+}
+
+function getNom(id) {
+  // id : 1-72
+  if (id < 1 || id > 72) return null;
+  var i = id - 1;
+  var trigramme = NAMES_RAW[i];
+  var seqNum = ((id - 1) % 18) + 1;
+  var posInSeq = Math.floor((id - 1) / 18);
+  var nomComplet = SEQS[seqNum - 1][posInSeq];
+  var suffix = SUFFIXES[i];
+  var translitFR = TRANSLIT_FR[i];
+  var translitEN = TRANSLIT_EN[i];
+  var saison = SAISONS[posInSeq];
+  // Dériver signe et position à partir de l'id
+  var signeIdx = Math.floor((id - 1) / 6);
+  var pos = ((id - 1) % 6) + 1;
+  var signe = SIGNES[signeIdx];
+  var degMin = (pos - 1) * 5;
+  var degMax = degMin + 5;
+  var gem = gemTrigramme(trigramme);
+  var gemSfx = gem + (GEM_SUFFIX[suffix] || 0);
+  return {
+    id: id,
+    trigramme: trigramme,
+    nomComplet: nomComplet,
+    translitFR: translitFR,
+    translitEN: translitEN,
+    translit: translitFR, // alias conservé pour compatibilité
+    suffix: suffix,
+    saison: saison,
+    seqNum: seqNum,
+    posInSeq: posInSeq,
+    signe: signe,
+    pos: pos,
+    degres: degMin + '°–' + degMax + '°',
+    gem: gem,                  // gematria du trigramme seul (3 lettres)
+    gemAvecSuffixe: gemSfx     // gematria avec suffixe El (+31) ou Yah (+15)
+  };
+}
+
+// Retourne la translittération selon la langue et le mode d'affichage.
+// Si le mode "Épuré" est actif, on ne retourne rien quelle que soit la langue.
+function currentTranslit(nom) {
+  if (!nom) return '';
+  if (!state.showTranslit) return '';
+  return state.language === 'en' ? nom.translitEN : nom.translitFR;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CONSTRUCTION DU FORMULAIRE
+   ════════════════════════════════════════════════════════════════════ */
 
 function buildForm() {
-    const container = document.getElementById('positions-form');
-    let html = '';
-    for (const body of BODIES) {
-        const signOptions = SIGNS.map(s =>
-            `<option value="${s.fr}">${s.fr}</option>`
-        ).join('');
-        html += `<div class="form-row">
-            <label>${body.id}</label>
-            <select id="sign-${body.id}">${signOptions}</select>
-            <input type="number" id="deg-${body.id}" min="0" max="29.99" step="0.01" value="0">
-        </div>`;
-    }
-    container.innerHTML = html;
+  var zones = {coeur: [], couronne: [], porte: []};
+  CHAMPS.forEach(function(c) { zones[c.zone].push(c); });
+
+  function renderZone(containerId, list) {
+    var html = '';
+    list.forEach(function(c) {
+      html += '<div class="field-row">';
+      html += '<span class="field-num">' + (c.idx + 1) + '</span>';
+      html += '<span class="field-label">' + c.label + '</span>';
+      html += '<div></div>';
+      html += '</div>';
+      html += '<div class="field-row no-num">';
+      html += '<div class="double-select">';
+      html += '<select data-idx="' + c.idx + '" data-kind="signe">';
+      html += '<option value="">— Signe —</option>';
+      SIGNES.forEach(function(s, i) {
+        html += '<option value="' + i + '">' + s.sym + ' ' + s.nom + '</option>';
+      });
+      html += '</select>';
+      html += '<select data-idx="' + c.idx + '" data-kind="pos">';
+      html += '<option value="">—</option>';
+      for (var p = 1; p <= 6; p++) html += '<option value="' + p + '">' + p + '</option>';
+      html += '</select>';
+      html += '</div>';
+      html += '</div>';
+    });
+    document.getElementById(containerId).innerHTML = html;
+  }
+
+  renderZone('section-coeur', zones.coeur);
+  renderZone('section-couronne', zones.couronne);
+  renderZone('section-portes', zones.porte);
 }
 
-function randomPositions() {
-    for (const body of BODIES) {
-        const signIdx = Math.floor(Math.random() * 12);
-        const deg = Math.round(Math.random() * 2999) / 100;
-        document.getElementById(`sign-${body.id}`).value = SIGNS[signIdx].fr;
-        document.getElementById(`deg-${body.id}`).value = deg;
-    }
-    calculate();
-}
-
-function randomNames() {
-    // Place 14 Noms aléatoires directement (sans calcul de mi-points)
-    const available = [...Array(72).keys()].map(i => i + 1);
-    // Mélange Fisher-Yates
-    for (let i = available.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [available[i], available[j]] = [available[j], available[i]];
-    }
-    const chosen = available.slice(0, 14);
-
-    const components = [];
-    for (let i = 0; i < 14; i++) {
-        const shem = getShem72(chosen[i]);
-        const body = BODIES[i];
-        components.push({
-            position: i + 1,
-            body: body.id,
-            bodyLabel: body.fr,
-            calcType: 'aléatoire',
-            resultDeg: shem.ds + 2.5,
-            shem: shem,
-            gematria: wordGematria(shem.h)
-        });
-    }
-
-    currentResults = {
-        name: document.getElementById('inp-name').value || 'Aléatoire',
-        birthDate: document.getElementById('inp-date').value,
-        birthTime: document.getElementById('inp-time').value,
-        birthLocation: document.getElementById('inp-location').value,
-        mode: 'random-names',
-        components: components
-    };
-
-    displayResults();
-}
-
-function calculate() {
-    const positions = {};
-    for (const body of BODIES) {
-        const sign = document.getElementById(`sign-${body.id}`).value;
-        const deg = parseFloat(document.getElementById(`deg-${body.id}`).value) || 0;
-        positions[body.id] = { sign, degree: deg, absolute: signDegreeToAbsolute(sign, deg) };
-    }
-
-    const sunDeg = positions["Soleil"].absolute;
-    const components = [];
-
-    for (let i = 0; i < BODIES.length; i++) {
-        const body = BODIES[i];
-        let calcType, resultDeg;
-
-        if (body.id === "Soleil") {
-            calcType = "direct";
-            resultDeg = sunDeg;
-        } else {
-            calcType = "mi-point";
-            resultDeg = midpoint(sunDeg, positions[body.id].absolute);
-        }
-
-        const shemNum = degreeToShem72(resultDeg);
-        const shem = getShem72(shemNum);
-        const sd = absoluteToSignDegree(resultDeg);
-
-        components.push({
-            position: i + 1,
-            body: body.id,
-            bodyLabel: body.fr,
-            calcType: calcType,
-            resultDeg: resultDeg,
-            resultSign: sd.sign,
-            shem: shem,
-            gematria: wordGematria(shem.h)
-        });
-    }
-
-    currentResults = {
-        name: document.getElementById('inp-name').value || 'Sans nom',
-        birthDate: document.getElementById('inp-date').value,
-        birthTime: document.getElementById('inp-time').value,
-        birthLocation: document.getElementById('inp-location').value,
-        mode: 'calculated',
-        components: components
-    };
-
-    displayResults();
-}
-
-// ══════════════════════════════════════════════════════════════════════════
-// AFFICHAGE DES RÉSULTATS
-// ══════════════════════════════════════════════════════════════════════════
-
-function displayResults() {
-    if (!currentResults) return;
-
-    const section = document.getElementById('results-section');
-    section.classList.add('visible');
-
-    // Header
-    const header = document.getElementById('results-header');
-    let headerHtml = `<p style="text-align:center; font-size:1.1rem; color:var(--text);">
-        <strong>${currentResults.name}</strong>`;
-    if (currentResults.birthDate) {
-        headerHtml += ` — ${currentResults.birthDate}`;
-        if (currentResults.birthTime) headerHtml += ` ${currentResults.birthTime}`;
-        if (currentResults.birthLocation) headerHtml += ` — ${currentResults.birthLocation}`;
-    }
-    if (currentResults.mode === 'random-names') {
-        headerHtml += `<br><span style="color:var(--accent); font-size:0.85rem;">Mode : 14 Noms aléatoires (sans mi-points)</span>`;
-    }
-    headerHtml += `</p>`;
-    header.innerHTML = headerHtml;
-
-    // Table
-    const tbody = document.getElementById('results-tbody');
-    let totalGem = 0;
-    let rows = '';
-
-    for (const c of currentResults.components) {
-        totalGem += c.gematria;
-        const calcLabel = c.calcType === 'direct' ? 'SOLEIL' :
-                          c.calcType === 'aléatoire' ? 'aléat.' : 'mi-point';
-        const calcClass = c.calcType === 'direct' ? 'calc-direct' : 'calc-midpoint';
-        const degStr = c.resultDeg !== undefined ? c.resultDeg.toFixed(2) + '°' : '—';
-
-        rows += `<tr>
-            <td>${c.position}</td>
-            <td>${c.body}</td>
-            <td class="${calcClass}">${calcLabel}</td>
-            <td>${degStr}</td>
-            <td>${c.shem.tr}</td>
-            <td class="hebrew">${c.shem.h}</td>
-            <td>${c.shem.s} ${c.shem.ds}°–${c.shem.de}°</td>
-            <td>${c.shem.v}</td>
-            <td>${c.gematria}</td>
-        </tr>`;
-    }
-
-    rows += `<tr class="total-row">
-        <td colspan="8" style="text-align:right;">Gématria totale</td>
-        <td>${totalGem}</td>
-    </tr>`;
-
-    tbody.innerHTML = rows;
-
-    // Gematria total
-    document.getElementById('gematria-total').textContent =
-        `Gématria totale : ${totalGem}`;
-
-    // Details
-    const details = document.getElementById('details-section');
-    let detailsHtml = '';
-
-    for (const c of currentResults.components) {
-        const calcInfo = c.calcType === 'direct' ? 'Position directe du Soleil' :
-                         c.calcType === 'aléatoire' ? 'Placement aléatoire' :
-                         `Mi-point Soleil ↔ ${c.body} → ${c.resultDeg.toFixed(2)}°`;
-        detailsHtml += `<div class="detail-card">
-            <div class="detail-header" onclick="toggleDetail(this)">
-                <span>[${c.position}] ${c.bodyLabel} — <strong>${c.shem.tr}</strong> (#${c.shem.n})</span>
-                <span class="arrow">▶</span>
-            </div>
-            <div class="detail-body">
-                <div class="hebrew-large">${c.shem.h}</div>
-                <p><span class="label">Translittération :</span> ${c.shem.tr}</p>
-                <p><span class="label">Signe :</span> ${c.shem.s} (${c.shem.ds}°–${c.shem.de}°) — ${c.shem.na}</p>
-                <p><span class="label">Voyelles :</span> ${c.shem.v}</p>
-                <p><span class="label">Gématria :</span> ${c.gematria}</p>
-                <p><span class="label">Trimestre :</span> ${c.shem.tm}</p>
-                <p><span class="label">Calcul :</span> ${calcInfo}</p>
-                <p class="function">${c.shem.ff}</p>
-            </div>
-        </div>`;
-    }
-
-    details.innerHTML = detailsHtml;
-
-    // SVG
-    drawMandala();
-
-    // Scroll to results
-    section.scrollIntoView({ behavior: 'smooth' });
-}
-
-function toggleDetail(el) {
-    el.classList.toggle('open');
-    el.nextElementSibling.classList.toggle('open');
-}
-
-// ══════════════════════════════════════════════════════════════════════════
-// VISUALISATION SVG — MANDALA CIRCULAIRE
-// ══════════════════════════════════════════════════════════════════════════
-
-function drawMandala() {
-    if (!currentResults) return;
-
-    const size = 600;
-    const cx = size / 2;
-    const cy = 280; // centre légèrement haut pour laisser place aux 4 Noms en bas
-    const rCircle = 200; // rayon du cercle principal
-    const rCrown = 160; // rayon pour le texte hébreu de la couronne
-    const rLabel = 230;  // rayon pour les labels corps célestes
-
-    const bodyColors = [
-        '#ffd700', // Soleil
-        '#c0c0c0', // Lune
-        '#4a9eff', // Mercure
-        '#ff69b4', // Vénus
-        '#ff4444', // Mars
-        '#ff8c00', // Jupiter
-        '#8b8b00', // Saturne
-        '#00ced1', // Uranus
-        '#4169e1', // Neptune
-        '#8b008b', // Pluton
-        '#90ee90', // Noeud Nord
-        '#90ee90', // Noeud Sud
-        '#dda0dd', // Ascendant
-        '#f0e68c'  // MC
-    ];
-
-    let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
-
-    // Fond
-    svg += `<rect width="${size}" height="${size}" fill="#0d1117"/>`;
-
-    // Cercle principal blanc (contour)
-    svg += `<circle cx="${cx}" cy="${cy}" r="${rCircle}" fill="none" stroke="#e8e8e8" stroke-width="2"/>`;
-
-    // Cercle intérieur doré (pour le centre)
-    svg += `<circle cx="${cx}" cy="${cy}" r="55" fill="#16213e" stroke="#d4a574" stroke-width="1.5"/>`;
-
-    // ── Centre : N1 (Soleil) + N2 (Lune) ──
-    if (currentResults.components.length >= 2) {
-        const n1 = currentResults.components[0]; // Soleil
-        const n2 = currentResults.components[1]; // Lune
-
-        // Noms hébreux au centre (RTL)
-        svg += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" dominant-baseline="central" fill="${bodyColors[0]}" font-size="22" font-family="'SBL Hebrew','Ezra SIL','Times New Roman',serif" direction="rtl">${n1.shem.h}</text>`;
-        svg += `<text x="${cx}" y="${cy + 16}" text-anchor="middle" dominant-baseline="central" fill="${bodyColors[1]}" font-size="22" font-family="'SBL Hebrew','Ezra SIL','Times New Roman',serif" direction="rtl">${n2.shem.h}</text>`;
-
-        // Labels petits
-        svg += `<text x="${cx}" y="${cy - 28}" text-anchor="middle" fill="${bodyColors[0]}" font-size="8" opacity="0.7">Soleil</text>`;
-        svg += `<text x="${cx}" y="${cy + 34}" text-anchor="middle" fill="${bodyColors[1]}" font-size="8" opacity="0.7">Lune</text>`;
-    }
-
-    // ── Couronne : N3–N10 (Mercure → Pluton) — 8 Noms sur le cercle ──
-    // Texte hébreu horizontal positionné autour du cercle
-    const crownNames = currentResults.components.slice(2, 10);
-    for (let i = 0; i < crownNames.length; i++) {
-        const c = crownNames[i];
-        const angleDeg = i * 45 - 90; // 0=haut, 45° entre chaque
-        const angleRad = (angleDeg * Math.PI) / 180;
-
-        // Position du marqueur sur le cercle
-        const px = cx + rCircle * Math.cos(angleRad);
-        const py = cy + rCircle * Math.sin(angleRad);
-
-        // Petit marqueur sur le cercle
-        svg += `<circle cx="${px}" cy="${py}" r="4" fill="${bodyColors[i + 2]}" stroke="#fff" stroke-width="0.5"/>`;
-
-        // Texte hébreu horizontal entre le cercle et le centre
-        const hx = cx + rCrown * Math.cos(angleRad);
-        const hy = cy + rCrown * Math.sin(angleRad);
-        svg += `<text x="${hx}" y="${hy}" text-anchor="middle" dominant-baseline="central" fill="${bodyColors[i + 2]}" font-size="18" font-family="'SBL Hebrew','Ezra SIL','Times New Roman',serif" direction="rtl">${c.shem.h}</text>`;
-
-        // Label du corps céleste (à l'extérieur du cercle)
-        const lx = cx + rLabel * Math.cos(angleRad);
-        const ly = cy + rLabel * Math.sin(angleRad);
-        const shortLabel = c.body.replace('Noeud ', 'N.').replace('Ascendant', 'Asc');
-        svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" fill="${bodyColors[i + 2]}" font-size="9" opacity="0.8">${shortLabel}</text>`;
-    }
-
-    // ── Bas du mandala : N11–N14 (Noeud Nord → MC) ──
-    const bottomNames = currentResults.components.slice(10, 14);
-    const bottomY = cy + rCircle + 60;
-    const bottomSpacing = 130;
-    const bottomStartX = cx - (bottomNames.length - 1) * bottomSpacing / 2;
-
-    for (let i = 0; i < bottomNames.length; i++) {
-        const c = bottomNames[i];
-        const bx = bottomStartX + i * bottomSpacing;
-
-        // Nom hébreu
-        svg += `<text x="${bx}" y="${bottomY}" text-anchor="middle" dominant-baseline="central" fill="${bodyColors[i + 10]}" font-size="18" font-family="'SBL Hebrew','Ezra SIL','Times New Roman',serif" direction="rtl">${c.shem.h}</text>`;
-
-        // Label corps céleste
-        const shortLabel = c.body.replace('Noeud ', 'N.').replace('Ascendant', 'Asc');
-        svg += `<text x="${bx}" y="${bottomY + 18}" text-anchor="middle" fill="${bodyColors[i + 10]}" font-size="8" opacity="0.7">${shortLabel}</text>`;
-
-        // Translittération
-        svg += `<text x="${bx}" y="${bottomY - 18}" text-anchor="middle" fill="#a0a0a0" font-size="8">${c.shem.tr}</text>`;
-    }
-
-    // Titre sous le cercle
-    svg += `<text x="${cx}" y="${cy + rCircle + 25}" text-anchor="middle" fill="#d4a574" font-size="10" letter-spacing="0.2em">M A N D A L A — M A N T R A</text>`;
-
-    svg += `</svg>`;
-
-    document.getElementById('svg-mandala').innerHTML = svg;
-
-    // Footer info
-    const footer = document.getElementById('mandala-footer');
-    if (currentResults.mode === 'random-names') {
-        footer.innerHTML = '<span style="color:var(--accent); font-size:0.8rem;">14 Noms aléatoires</span>';
+function collectInputs() {
+  var ids = new Array(14).fill(null);
+  var incomplete = false;
+  CHAMPS.forEach(function(c) {
+    var selS = document.querySelector('select[data-idx="' + c.idx + '"][data-kind="signe"]');
+    var selP = document.querySelector('select[data-idx="' + c.idx + '"][data-kind="pos"]');
+    var sIdx = selS.value === '' ? null : parseInt(selS.value, 10);
+    var pos  = selP.value === '' ? null : parseInt(selP.value, 10);
+    if (sIdx === null || pos === null) {
+      incomplete = true;
+      ids[c.idx] = null;
     } else {
-        footer.innerHTML = '<span style="color:var(--text2); font-size:0.8rem;">Mi-points solaires — Seconde itération</span>';
+      ids[c.idx] = posToId(sIdx, pos);
     }
+  });
+  return {ids: ids, incomplete: incomplete};
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// EXPORT MARKDOWN
-// ══════════════════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════════
+   RENDU DU MANDALA EN SVG
+   ════════════════════════════════════════════════════════════════════ */
 
-function exportMarkdown() {
-    if (!currentResults) {
-        alert('Calculez d\'abord un mandala-mantra.');
-        return;
+var VIEW_W = 900;
+var VIEW_H_STANDARD = 900;
+var VIEW_H_DELUXE   = 1160;       // hauteur supplémentaire pour la bande des Portes (polices agrandies)
+var CENTER_X = VIEW_W / 2;
+var CENTER_Y = VIEW_H_STANDARD / 2;
+var R_HEADER = 400;                // rayon du libellé combiné "N#. FONCTION", courbé
+var R_LABEL  = 348;                // rayon du Nom hébreu courbé
+var R_TRANS  = 250;                // rayon du translit (texte droit) — 250 pour éviter le chevauchement avec les Noms 4 et 9
+
+// Placement des 8 Noms de la Couronne — octogone régulier à 45° d'intervalle,
+// décalé de 22,5° pour que les quatre cardinaux (12/3/6/9) restent libres.
+// idx réfère à CHAMPS[idx].
+// Chaque Nom de la Couronne représente le milieu Soleil-planète
+var COURONNE_LAYOUT = [
+  {idx: 2, angle: 112.5, planetFR: 'SOLEIL-MERCURE', planetEN: 'SUN-MERCURY'}, // ~6:45
+  {idx: 3, angle: 157.5, planetFR: 'SOLEIL-VÉNUS',   planetEN: 'SUN-VENUS'},   // ~8:15
+  {idx: 4, angle: 202.5, planetFR: 'SOLEIL-MARS',    planetEN: 'SUN-MARS'},    // ~9:45
+  {idx: 5, angle: 247.5, planetFR: 'SOLEIL-JUPITER', planetEN: 'SUN-JUPITER'}, // ~11:15
+  {idx: 6, angle: 292.5, planetFR: 'SOLEIL-SATURNE', planetEN: 'SUN-SATURN'},  // ~12:45
+  {idx: 7, angle: 337.5, planetFR: 'SOLEIL-URANUS',  planetEN: 'SUN-URANUS'},  // ~2:15
+  {idx: 8, angle: 22.5,  planetFR: 'SOLEIL-NEPTUNE', planetEN: 'SUN-NEPTUNE'}, // ~3:45
+  {idx: 9, angle: 67.5,  planetFR: 'SOLEIL-PLUTON',  planetEN: 'SUN-PLUTO'}    // ~5:15
+];
+
+// Ordre d'affichage des 4 Portes en bande basse (gauche → droite)
+// selon la seconde maquette : 14 · 13 · 12 · 11
+var PORTES_ORDER = [
+  {idx: 13, num: 14, labelFR: 'Nœud Nord',   labelEN: 'North Node'},
+  {idx: 12, num: 13, labelFR: 'Milieu Ciel', labelEN: 'Midheaven'},
+  {idx: 11, num: 12, labelFR: 'Nœud Sud',    labelEN: 'South Node'},
+  {idx: 10, num: 11, labelFR: 'Ascendant',   labelEN: 'Ascendant'}
+];
+
+// Libellés du Cœur selon la langue
+// N1 = Soleil seul (point natal direct), N2 = milieu Soleil-Lune
+var COEUR_LABELS = {
+  fr: {soleil: 'SOLEIL', lune: 'SOLEIL-LUNE', bandTitle: 'Les quatre Portes'},
+  en: {soleil: 'SUN',    lune: 'SUN-MOON',    bandTitle: 'The four Gates'}
+};
+
+function polar(cx, cy, r, angleDeg) {
+  var rad = angleDeg * Math.PI / 180;
+  return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
+}
+
+// Arc générique entre deux angles, sens horaire
+function arcPath(cx, cy, r, angleStart, angleEnd) {
+  var p1 = polar(cx, cy, r, angleStart);
+  var p2 = polar(cx, cy, r, angleEnd);
+  var delta = angleEnd - angleStart;
+  while (delta < 0) delta += 360;
+  var large = delta > 180 ? 1 : 0;
+  return 'M ' + p1.x + ' ' + p1.y + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p2.x + ' ' + p2.y;
+}
+
+// Arc orienté pour du texte lisible : CW sur la moitié haute, CCW sur la moitié basse,
+// de sorte que les lettres sont toujours à l'endroit quel que soit le quadrant.
+function arcPathForText(cx, cy, r, centerAngle, halfSpan) {
+  // Normaliser centerAngle dans (-180, 180]
+  var c = ((centerAngle % 360) + 540) % 360 - 180;
+  var bottomHalf = (c > 0 && c < 180);
+  var a1, a2, sweep;
+  if (bottomHalf) {
+    // Sens antihoraire : sweep=0, du côté "gauche-écran" vers "droite-écran"
+    a1 = c + halfSpan;
+    a2 = c - halfSpan;
+    sweep = 0;
+  } else {
+    // Sens horaire : sweep=1
+    a1 = c - halfSpan;
+    a2 = c + halfSpan;
+    sweep = 1;
+  }
+  var p1 = polar(cx, cy, r, a1);
+  var p2 = polar(cx, cy, r, a2);
+  return 'M ' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1) +
+         ' A ' + r + ' ' + r + ' 0 0 ' + sweep + ' ' + p2.x.toFixed(1) + ' ' + p2.y.toFixed(1);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Segmente une chaîne en graphèmes (consonne + marques de niqqud hébraïques).
+// Utilise Intl.Segmenter si disponible, avec repli manuel pour les marques hébraïques.
+function getGraphemes(s) {
+  if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
+    try {
+      var seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+      var arr = [];
+      for (var part of seg.segment(s)) arr.push(part.segment);
+      return arr;
+    } catch (e) { /* fallback ci-dessous */ }
+  }
+  var out = [];
+  for (var i = 0; i < s.length; i++) {
+    var ch = s[i];
+    var code = ch.charCodeAt(0);
+    var isMark = (code >= 0x0591 && code <= 0x05BD) || code === 0x05BF ||
+                 (code >= 0x05C1 && code <= 0x05C2) ||
+                 (code >= 0x05C4 && code <= 0x05C5) || code === 0x05C7;
+    if (isMark && out.length > 0) out[out.length - 1] += ch;
+    else out.push(ch);
+  }
+  return out;
+}
+
+// Rend un Nom hébreu sur un arc en plaçant chaque grapheme dans son propre
+// élément <text> positionné et tourné individuellement. Ce procédé élimine
+// toutes les ambiguïtés de rendu RTL avec textPath et laisse le moteur
+// gérer nativement le positionnement des niqqud (voyelles sous la consonne).
+// - centerAngle : angle SVG au centre de l'arc (degrés)
+// - halfSpan : demi-largeur angulaire de l'arc (degrés)
+// - R : rayon de l'arc (baseline des caractères)
+function renderHebrewOnArc(text, centerAngle, halfSpan, R) {
+  var graphemes = getGraphemes(text);
+  var N = graphemes.length;
+  if (N === 0) return '';
+  // Normaliser centerAngle dans (-180, 180]
+  var c = centerAngle;
+  while (c > 180) c -= 360;
+  while (c <= -180) c += 360;
+  var bottomHalf = (c > 0 && c < 180);
+  var angleStep = (halfSpan * 2) / N;
+  var svg = '';
+  for (var i = 0; i < N; i++) {
+    // Premier grapheme logique placé à l'extrémité « droite écran » de l'arc,
+    // les suivants progressant vers l'extrémité « gauche écran » (lecture RTL).
+    var angleG;
+    if (bottomHalf) {
+      // Arc tracé en CCW (angles décroissants du côté gauche vers droite écran),
+      // l'extrémité droite écran correspond au plus petit angle.
+      angleG = (c - halfSpan) + (i + 0.5) * angleStep;
+    } else {
+      // Arc en CW, extrémité droite écran = angle le plus grand.
+      angleG = (c + halfSpan) - (i + 0.5) * angleStep;
     }
+    var pt = polar(CENTER_X, CENTER_Y, R, angleG);
+    // Rotation : sommet du caractère vers l'extérieur (haut) ou vers le centre (bas)
+    var rot = bottomHalf ? (angleG - 90) : (angleG + 90);
+    svg += '<text class="vocalise-graph" x="' + pt.x.toFixed(1) + '" y="' + pt.y.toFixed(1) +
+           '" text-anchor="middle" transform="rotate(' + rot.toFixed(1) + ' ' +
+           pt.x.toFixed(1) + ' ' + pt.y.toFixed(1) + ')">' + graphemes[i] + '</text>';
+  }
+  return svg;
+}
 
-    const r = currentResults;
-    let md = `# Mandala-Mantra de ${r.name}\n\n`;
-    md += `**Date de création** : ${new Date().toLocaleDateString('fr-FR')}\n`;
-    md += `**Itération** : Seconde (14 Noms — mi-points solaires)\n`;
+// ─── Rendu d'un emplacement de Couronne ───
+function renderCouronneItem(nom, layout) {
+  var angleDeg   = layout.angle;
+  var champLabel = CHAMPS[layout.idx].label;
+  var posNum     = layout.idx + 1;     // numéro de place dans le mandala (1-14)
+  var planetLbl  = (state.language === 'en') ? layout.planetEN : layout.planetFR;
+  var combined   = 'N' + posNum + '. ' + planetLbl;
+  var dataAttrs  = (nom ? 'data-id="' + nom.id + '"' : '') +
+                   ' data-champ="' + esc(champLabel) + '"';
+  var halfSpanHead = 22;  // arc du libellé combiné (44° total, marge dans 45°) — pour SOLEIL-...
+  var halfSpanLbl  = 7;   // étendue angulaire des graphèmes hébreux (14° total, 2,8°/grapheme)
+  var pathHead     = 'arc-head-' + posNum;
 
-    if (r.birthDate) {
-        md += `**Naissance** : ${r.birthDate}`;
-        if (r.birthTime) md += ` ${r.birthTime}`;
-        if (r.birthLocation) md += ` — ${r.birthLocation}`;
-        md += `\n`;
+  var svg = '';
+  // Définition de l'arc du header (textPath)
+  svg += '<path id="' + pathHead + '" d="' +
+         arcPathForText(CENTER_X, CENTER_Y, R_HEADER, angleDeg, halfSpanHead) + '" fill="none"/>';
+
+  svg += '<g class="nom-block couronne" ' + dataAttrs + '>';
+
+  // Libellé combiné "N#. FONCTION" courbé sur l'arc extérieur
+  svg += '<text class="header-curve"><textPath href="#' + pathHead +
+         '" startOffset="50%" text-anchor="middle">' + combined + '</textPath></text>';
+
+  if (nom) {
+    // Numéro Shem72 + numéro de séquence "X-Y" (ex : "22-4") entre le header et l'hébreu.
+    // Tangent à l'arc à R_ID, orienté comme l'hébreu (top vers le centre côté bas, vers l'extérieur côté haut).
+    var R_ID = 377;
+    var ptID = polar(CENTER_X, CENTER_Y, R_ID, angleDeg);
+    // Même normalisation/orientation que renderHebrewOnArc
+    var cNorm = angleDeg;
+    while (cNorm > 180) cNorm -= 360;
+    while (cNorm <= -180) cNorm += 360;
+    var bottomHalf = (cNorm > 0 && cNorm < 180);
+    var rotID = bottomHalf ? (angleDeg - 90) : (angleDeg + 90);
+    var idText = nom.id + '-' + nom.seqNum;
+    svg += '<text class="nom-id" x="' + ptID.x.toFixed(1) + '" y="' + ptID.y.toFixed(1) +
+           '" text-anchor="middle" transform="rotate(' + rotID.toFixed(1) + ' ' +
+           ptID.x.toFixed(1) + ' ' + ptID.y.toFixed(1) + ')">' + idText + '</text>';
+
+    // Nom hébreu vocalisé : rendu grapheme par grapheme pour contourner
+    // les défauts de textPath avec le RTL et garantir un positionnement
+    // correct des niqqud (gérés nativement par la police sur chaque grapheme).
+    svg += renderHebrewOnArc(nom.nomComplet, angleDeg, halfSpanLbl, R_LABEL);
+
+    // Translittération en texte droit, radialement vers le centre
+    var ptT = polar(CENTER_X, CENTER_Y, R_TRANS, angleDeg);
+    var translitTxt = currentTranslit(nom);
+    if (translitTxt) {
+      svg += '<text class="translit" x="' + ptT.x.toFixed(1) + '" y="' + ptT.y.toFixed(1) + '" text-anchor="middle">' + translitTxt + '</text>';
     }
+  }
 
-    if (r.mode === 'random-names') {
-        md += `**Mode** : 14 Noms aléatoires (exploration)\n`;
+  svg += '</g>';
+  return svg;
+}
+
+// ─── Rendu d'une Porte (version Deluxe) placée en bande basse ───
+function renderPorteItem(nom, cx, cy, champLabel, porteNum) {
+  var dataAttrs = (nom ? 'data-id="' + nom.id + '"' : '') +
+                  ' data-champ="' + esc(champLabel) + '"';
+  var svg = '<g class="nom-block porte" ' + dataAttrs + '>';
+  // Libellé "N. Nom (selon langue courante)"
+  svg += '<text class="porte-head" x="' + cx + '" y="' + cy + '" text-anchor="middle">' +
+         porteNum + '. ' + esc(champLabel) + '</text>';
+  if (nom) {
+    // X-Y (numéro Shem72 + numéro de séquence) entre le libellé et l'hébreu
+    svg += '<text class="nom-id" x="' + cx + '" y="' + (cy + 24) + '" text-anchor="middle">' +
+           nom.id + '-' + nom.seqNum + '</text>';
+    svg += '<text class="vocalise porte-voc" x="' + cx + '" y="' + (cy + 54) + '" text-anchor="middle">' + nom.nomComplet + '</text>';
+    var translitTxt = currentTranslit(nom);
+    if (translitTxt) {
+      svg += '<text class="translit porte-trans" x="' + cx + '" y="' + (cy + 78) + '" text-anchor="middle">' + translitTxt + '</text>';
     }
+  }
+  svg += '</g>';
+  return svg;
+}
 
-    md += `\n---\n\n`;
-    md += `## Tableau récapitulatif\n\n`;
-    md += `| # | Corps céleste | Nom | Hébreu | Signe | Gématria |\n`;
-    md += `|--:|:-------------|:-----|:-------|:------|--------:|\n`;
-
-    let total = 0;
-    for (const c of r.components) {
-        total += c.gematria;
-        md += `| ${c.position} | ${c.body} | ${c.shem.tr} | ${c.shem.h} | ${c.shem.s} ${c.shem.ds}°–${c.shem.de}° | ${c.gematria} |\n`;
+// ─── Bloc « Gematria » (hors cercle, coin haut-droit du SVG) ───
+// Cadre fin, titre, et 3 sommes (Centre · Couronne · Total) avec leur résolution
+// théosophique entre parenthèses. Ex. 661 → "661 (13, 4)" car 6+6+1=13 puis 1+3=4.
+// Convention de gematria utilisée : trigramme + suffixe (El=31 / Yah=15).
+// Si un Nom est manquant, sa valeur compte pour 0 et la somme affiche un astérisque.
+function renderGemSummary(ids) {
+  function sumOf(indices) {
+    var total = 0;
+    var missing = 0;
+    indices.forEach(function(i) {
+      if (ids[i]) {
+        var n = getNom(ids[i]);
+        total += n.gemAvecSuffixe;
+      } else {
+        missing++;
+      }
+    });
+    return { total: total, missing: missing };
+  }
+  // Réductions successives : 661 → [13, 4]  /  422 → [8]  /  5 → []
+  function resolutions(n) {
+    var arr = [];
+    var current = Math.abs(n);
+    while (current >= 10) {
+      var sum = 0;
+      var s = String(current);
+      for (var i = 0; i < s.length; i++) sum += parseInt(s[i], 10);
+      arr.push(sum);
+      current = sum;
     }
-    md += `| | | | | **Total** | **${total}** |\n`;
+    return arr;
+  }
+  function fmt(s) {
+    var astr = s.missing > 0 ? '*' : '';
+    var rsl = resolutions(s.total);
+    return s.total + astr + (rsl.length > 0 ? ' (' + rsl.join(', ') + ')' : '');
+  }
 
-    md += `\n---\n\n`;
-    md += `## Les 14 Noms du mandala-mantra\n\n`;
+  var centre   = sumOf([0, 1]);                       // N1, N2
+  var couronne = sumOf([2, 3, 4, 5, 6, 7, 8, 9]);    // N3..N10
+  var total    = { total: centre.total + couronne.total,
+                   missing: centre.missing + couronne.missing };
 
-    for (const c of r.components) {
-        md += `### ${c.position}. ${c.bodyLabel}\n\n`;
-        md += `**Nom #${c.shem.n}** : ${c.shem.h} — **${c.shem.tr}**\n\n`;
-        md += `- **Signe** : ${c.shem.s} (${c.shem.ds}°–${c.shem.de}°) — ${c.shem.na}\n`;
-        md += `- **Voyelles** : ${c.shem.v}\n`;
-        md += `- **Gématria** : ${c.gematria}\n`;
-        md += `- **Trimestre** : ${c.shem.tm}\n`;
+  // Coordonnées du cadre — coin haut-gauche, hors du cercle (R=400 max, top du cercle à y=50).
+  // Cadre poussé contre le bord gauche du viewBox : x=2..198.
+  var xBox = 2, yBox = 22, wBox = 196, hBox = 128;
+  var xL = xBox + 12;             // ancrage gauche des libellés
+  var xR = xBox + wBox - 10;      // ancrage droit des valeurs
+  var xCenter = xBox + wBox / 2;
 
-        const calcInfo = c.calcType === 'direct' ? 'Position directe du Soleil' :
-                         c.calcType === 'aléatoire' ? 'Placement aléatoire' :
-                         `Mi-point Soleil ↔ ${c.body} → ${c.resultDeg.toFixed(2)}°`;
-        md += `- **Calcul** : ${calcInfo}\n\n`;
-        md += `> **Fonction vibratoire** : ${c.shem.ff}\n\n`;
-        md += `---\n\n`;
+  var svg = '';
+  svg += '<g class="gem-summary-block">';
+  // Cadre fin noir
+  svg += '<rect class="gem-summary-frame" x="' + xBox + '" y="' + yBox +
+         '" width="' + wBox + '" height="' + hBox + '" rx="3" ry="3"/>';
+  // Titre "Gematria" centré
+  svg += '<text class="gem-summary-title" x="' + xCenter + '" y="' + (yBox + 22) +
+         '" text-anchor="middle">Gematria</text>';
+  // Trait de séparation sous le titre
+  svg += '<line class="gem-summary-rule" x1="' + (xL - 2) + '" y1="' + (yBox + 30) +
+         '" x2="' + (xR + 2) + '" y2="' + (yBox + 30) + '"/>';
+  // Centre
+  svg += '<text class="gem-summary-label" x="' + xL + '" y="' + (yBox + 52) + '" text-anchor="start">Centre</text>';
+  svg += '<text class="gem-summary-value" x="' + xR + '" y="' + (yBox + 52) + '" text-anchor="end">' + fmt(centre) + '</text>';
+  // Couronne
+  svg += '<text class="gem-summary-label" x="' + xL + '" y="' + (yBox + 76) + '" text-anchor="start">Couronne</text>';
+  svg += '<text class="gem-summary-value" x="' + xR + '" y="' + (yBox + 76) + '" text-anchor="end">' + fmt(couronne) + '</text>';
+  // Trait avant Total
+  svg += '<line class="gem-summary-rule" x1="' + (xL - 2) + '" y1="' + (yBox + 90) +
+         '" x2="' + (xR + 2) + '" y2="' + (yBox + 90) + '"/>';
+  // Total
+  svg += '<text class="gem-summary-label gem-summary-total" x="' + xL + '" y="' + (yBox + 112) + '" text-anchor="start">Total</text>';
+  svg += '<text class="gem-summary-value gem-summary-total" x="' + xR + '" y="' + (yBox + 112) + '" text-anchor="end">' + fmt(total) + '</text>';
+  if (total.missing > 0) {
+    svg += '<text class="gem-summary-note" x="' + xCenter + '" y="' + (yBox + hBox + 14) +
+           '" text-anchor="middle">* ' + total.missing + ' Nom(s) manquant(s)</text>';
+  }
+  svg += '</g>';
+  return svg;
+}
+
+function renderMandala(ids, format, clientName) {
+  var viewH = (format === 'deluxe') ? VIEW_H_DELUXE : VIEW_H_STANDARD;
+  var svg = '';
+  svg += '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + VIEW_W + ' ' + viewH + '" preserveAspectRatio="xMidYMid meet">';
+
+  // Anneau guide extérieur (fin)
+  svg += '<circle class="section-ring" cx="' + CENTER_X + '" cy="' + CENTER_Y + '" r="' + R_LABEL + '"/>';
+
+  // ─── Bloc des 3 sommes gematria (hors cercle, en haut à droite) ───
+  // Convention : gematria du trigramme + suffixe (El=31 / Yah=15)
+  svg += renderGemSummary(ids);
+
+  // ─── Cœur (Noms 1 & 2) au centre ───
+  var coeur1 = ids[0] ? getNom(ids[0]) : null;  // Soleil (droite)
+  var coeur2 = ids[1] ? getNom(ids[1]) : null;  // Lune   (gauche)
+  var dxCoeur = 95;
+
+  function renderCoeurSide(nom, cx, cy, champLabel, posNum, fonctionLabel) {
+    var dataAttrs = (nom ? 'data-id="' + nom.id + '"' : '') +
+                    ' data-champ="' + esc(champLabel) + '"';
+    var s = '<g class="nom-block coeur" ' + dataAttrs + '>';
+    // Libellé combiné "N#. FONCTION" au-dessus
+    s += '<text class="header-plain" x="' + cx + '" y="' + (cy - 60) + '" text-anchor="middle">N' +
+         posNum + '. ' + fonctionLabel + '</text>';
+    if (nom) {
+      // X-Y (numéro Shem72 + numéro de séquence) entre le libellé et l'hébreu — remonté
+      s += '<text class="nom-id" x="' + cx + '" y="' + (cy - 36) + '" text-anchor="middle">' +
+           nom.id + '-' + nom.seqNum + '</text>';
+      s += '<text class="vocalise" x="' + cx + '" y="' + cy + '" text-anchor="middle">' + nom.nomComplet + '</text>';
+      var translitTxt = currentTranslit(nom);
+      if (translitTxt) {
+        s += '<text class="translit" x="' + cx + '" y="' + (cy + 34) + '" text-anchor="middle">' + translitTxt + '</text>';
+      }
     }
+    s += '</g>';
+    return s;
+  }
+  var coeurLbl = COEUR_LABELS[state.language] || COEUR_LABELS.fr;
+  svg += renderCoeurSide(coeur2, CENTER_X - dxCoeur, CENTER_Y, CHAMPS[1].label, 2, coeurLbl.lune);   // Lune à gauche
+  svg += renderCoeurSide(coeur1, CENTER_X + dxCoeur, CENTER_Y, CHAMPS[0].label, 1, coeurLbl.soleil); // Soleil à droite
 
-    md += `*Document généré le ${new Date().toISOString().slice(0, 16)} par mandala-mantra v2*\n`;
+  // ─── Couronne (Noms 3 à 10) ───
+  COURONNE_LAYOUT.forEach(function(l) {
+    var nom = ids[l.idx] ? getNom(ids[l.idx]) : null;
+    svg += renderCouronneItem(nom, l);
+  });
 
-    // Télécharger
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeName = r.name.replace(/[^a-zA-Z0-9À-ÿ]/g, '_');
-    const filename = `MM_${safeName}_fr.md`;
-    a.download = filename;
-    a.click();
+  // ─── Flèche « début du mantra » entre N10 et N3 (au bas du cercle) ───
+  // Pointe vers la gauche : indique que N3 (Mercure, à gauche) est le premier Nom.
+  var arrowX = CENTER_X;
+  var arrowY = CENTER_Y + R_LABEL;
+  var aS = 11;
+  svg += '<g class="start-arrow-group">';
+  svg += '<polygon class="start-arrow" points="' +
+         (arrowX - aS) + ',' + arrowY + ' ' +
+         (arrowX + aS * 0.75) + ',' + (arrowY - aS * 0.65) + ' ' +
+         (arrowX + aS * 0.75) + ',' + (arrowY + aS * 0.65) + '"/>';
+  svg += '<line class="start-arrow-line" x1="' + (arrowX + aS * 0.75) + '" y1="' + arrowY +
+         '" x2="' + (arrowX + aS * 2.4) + '" y2="' + arrowY + '"/>';
+  svg += '</g>';
+
+  // ─── Portes (Noms 11 à 14) en bande basse, Deluxe uniquement ───
+  if (format === 'deluxe') {
+    var bandY = VIEW_H_STANDARD + 70;   // haut de la bande
+    var gutter = 60;
+    var usableW = VIEW_W - gutter * 2;
+    var step = usableW / 4;
+    // Séparateur horizontal fin
+    svg += '<line class="center-line" x1="' + gutter + '" y1="' + (VIEW_H_STANDARD + 20) +
+           '" x2="' + (VIEW_W - gutter) + '" y2="' + (VIEW_H_STANDARD + 20) + '"/>';
+    // Titre de la bande (selon langue)
+    var coeurLbl2 = COEUR_LABELS[state.language] || COEUR_LABELS.fr;
+    svg += '<text class="mandala-title" x="' + (VIEW_W / 2) + '" y="' + (VIEW_H_STANDARD + 48) + '">' + coeurLbl2.bandTitle + '</text>';
+    PORTES_ORDER.forEach(function(p, i) {
+      var cx = gutter + step * (i + 0.5);
+      var cy = bandY + 24;
+      var nom = ids[p.idx] ? getNom(ids[p.idx]) : null;
+      var porteLabel = (state.language === 'en') ? p.labelEN : p.labelFR;
+      svg += renderPorteItem(nom, cx, cy, porteLabel, p.num);
+    });
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TOOLTIP
+   ════════════════════════════════════════════════════════════════════ */
+
+var tooltipEl = document.getElementById('tooltip');
+
+function showTooltip(evt, id, champLabel) {
+  var nom = getNom(id);
+  if (!nom) return;
+  var h = '';
+  h += '<div><span class="tt-num">Nom #' + nom.id + '</span> · ' + esc(champLabel) + '</div>';
+  h += '<div class="tt-heb">' + nom.nomComplet + '</div>';
+  var tttr = currentTranslit(nom);
+  if (tttr) {
+    h += '<div style="color:rgba(255,255,255,0.9);font-size:0.78rem;letter-spacing:0.02em;">' + tttr + '</div>';
+  }
+  h += '<div class="tt-row"><span class="tt-key">Trigramme</span><span style="font-family:\'Frank Ruhl Libre\',serif;direction:rtl;">' + nom.trigramme + '</span></div>';
+  h += '<div class="tt-row"><span class="tt-key">Position</span><span>' + nom.signe.sym + ' ' + nom.signe.nom + ' ' + nom.degres + '</span></div>';
+  h += '<div class="tt-row"><span class="tt-key">Suffixe</span><span>' + nom.suffix + ' (+' + (GEM_SUFFIX[nom.suffix] || 0) + ')</span></div>';
+  h += '<div class="tt-row"><span class="tt-key">Gematria</span><span>' + nom.gem + ' + ' + (GEM_SUFFIX[nom.suffix] || 0) + ' = <strong>' + nom.gemAvecSuffixe + '</strong></span></div>';
+  h += '<div class="tt-row"><span class="tt-key">Saison</span><span>' + nom.saison + ' · Séq. ' + nom.seqNum + '</span></div>';
+  tooltipEl.innerHTML = h;
+  tooltipEl.classList.add('visible');
+  positionTooltip(evt);
+}
+
+function positionTooltip(evt) {
+  var pad = 14;
+  var tw = tooltipEl.offsetWidth;
+  var th = tooltipEl.offsetHeight;
+  var x = evt.clientX + pad;
+  var y = evt.clientY + pad;
+  if (x + tw > window.innerWidth - 10) x = evt.clientX - tw - pad;
+  if (y + th > window.innerHeight - 10) y = evt.clientY - th - pad;
+  tooltipEl.style.left = x + 'px';
+  tooltipEl.style.top  = y + 'px';
+}
+
+function hideTooltip() {
+  tooltipEl.classList.remove('visible');
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   EXPORT
+   ════════════════════════════════════════════════════════════════════ */
+
+function currentSvgString() {
+  var wrap = document.getElementById('mandala-wrap');
+  var svg = wrap.querySelector('svg');
+  if (!svg) return null;
+  // Clone et sérialise avec les styles inline nécessaires
+  var clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  // Injecter les styles utilisés pour l'autonomie
+  var styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  styleEl.textContent = getExportStyles();
+  clone.insertBefore(styleEl, clone.firstChild);
+  return new XMLSerializer().serializeToString(clone);
+}
+
+function getExportStyles() {
+  return [
+    "@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;600;700&display=swap');",
+    ".header-curve { font-family:'Inter',sans-serif; font-size:17px; font-weight:600; fill:#4a4660; letter-spacing:0.12em; text-transform:uppercase; }",
+    ".header-plain { font-family:'Inter',sans-serif; font-size:17px; font-weight:600; fill:#4a4660; letter-spacing:0.12em; text-transform:uppercase; text-anchor:middle; }",
+    ".vocalise-graph { font-family:'Frank Ruhl Libre',serif; font-size:30px; font-weight:400; fill:#1f1d2e; direction:rtl; unicode-bidi:plaintext; text-rendering:optimizeLegibility; font-feature-settings:\"kern\" 1; }",
+    ".vocalise { font-family:'Frank Ruhl Libre',serif; font-size:30px; fill:#1f1d2e; text-anchor:middle; direction:rtl; unicode-bidi:plaintext; }",
+    ".nom-block.coeur .vocalise { font-size:36px; fill:#7a3e3e; }",
+    ".translit { font-family:'Inter',sans-serif; font-size:14px; font-style:italic; fill:#4a4660; text-anchor:middle; letter-spacing:0.02em; }",
+    ".nom-block.coeur .translit { font-size:15px; }",
+    ".porte-head { font-family:'Cormorant Garamond',serif; font-size:20px; font-style:italic; fill:#7a5b3e; letter-spacing:0.04em; text-anchor:middle; }",
+    ".porte-voc { font-size:34px; }",
+    ".porte-trans { font-size:15px; }",
+    ".section-ring { fill:none; stroke:#e2dccf; stroke-width:1; }",
+    ".center-line { stroke:#e2dccf; stroke-width:0.5; stroke-dasharray:3 3; }",
+    ".start-arrow { fill:#b48f46; }",
+    ".start-arrow-line { stroke:#b48f46; stroke-width:1.5; }",
+    ".start-arrow-label { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; fill:#b48f46; letter-spacing:0.06em; }",
+    ".mandala-title { font-family:'Cormorant Garamond',serif; font-style:italic; fill:#8e8aa3; font-size:13px; text-anchor:middle; letter-spacing:0.08em; }",
+    ".nom-id { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; fill:#3e2d5e; letter-spacing:0.03em; text-anchor:middle; }",
+    ".nom-block.coeur .nom-id { fill:#000; font-size:22px; font-weight:700; }",
+    ".gem-summary-frame { fill:rgba(255,255,255,0.7); stroke:#000; stroke-width:0.8; }",
+    ".gem-summary-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; fill:#000; letter-spacing:0.12em; text-transform:uppercase; }",
+    ".gem-summary-label { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:15px; fill:#4a4660; letter-spacing:0.05em; }",
+    ".gem-summary-value { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:600; fill:#1f1d2e; letter-spacing:0.02em; }",
+    ".gem-summary-total.gem-summary-label { fill:#3e2d5e; font-style:normal; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; font-size:15px; }",
+    ".gem-summary-total.gem-summary-value { fill:#3e2d5e; font-weight:700; font-size:17px; }",
+    ".gem-summary-rule { stroke:#000; stroke-width:0.5; opacity:0.4; }",
+    ".gem-summary-note { font-family:'Inter',sans-serif; font-size:10px; font-style:italic; fill:#8e8aa3; }"
+  ].join('\n');
+}
+
+function downloadSVG() {
+  var s = currentSvgString();
+  if (!s) return;
+  var blob = new Blob([s], {type: 'image/svg+xml'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = buildFilename() + '.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+}
+
+function downloadPNG() {
+  var s = currentSvgString();
+  if (!s) return;
+  var scale = 2;
+  var format = state.format;
+  var h = (format === 'deluxe') ? VIEW_H_DELUXE : VIEW_H_STANDARD;
+  var canvas = document.createElement('canvas');
+  canvas.width  = VIEW_W * scale;
+  canvas.height = h * scale;
+  var ctx = canvas.getContext('2d');
+  // Fond crème pour la sortie
+  ctx.fillStyle = '#fbf9f3';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  var img = new Image();
+  var blob = new Blob([s], {type: 'image/svg+xml;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  img.onload = function() {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
-
-    // Notification
-    const note = document.createElement('div');
-    note.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);color:var(--gold);padding:0.8rem 1.2rem;border-radius:6px;border:1px solid var(--gold);font-size:0.85rem;z-index:999;max-width:400px;';
-    note.innerHTML = `<strong>${filename}</strong> téléchargé.<br><span style="color:var(--text2);font-size:0.8rem;">→ Déplacez-le dans <code>Output/</code> pour archivage.</span>`;
-    document.body.appendChild(note);
-    setTimeout(() => note.remove(), 5000);
+    canvas.toBlob(function(blob) {
+      var url2 = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url2;
+      a.download = buildFilename() + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url2); }, 500);
+    }, 'image/png');
+  };
+  img.onerror = function() {
+    alert('Export PNG impossible. L\'export SVG reste disponible.');
+  };
+  img.src = url;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// INITIALISATION
-// ══════════════════════════════════════════════════════════════════════════
+function buildFilename() {
+  var base = 'mandala_mantra';
+  var name = document.getElementById('client-name').value.trim();
+  var format = document.querySelector('.format-toggle button.active').dataset.format;
+  var lang = state.language;
+  var purity = state.showTranslit ? '' : 'epure';
+  var parts = [base];
+  if (name) {
+    parts.push(name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g,''));
+  }
+  parts.push(format);
+  parts.push(lang);
+  if (purity) parts.push(purity);
+  return parts.filter(Boolean).join('_');
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ÉTAT & ÉVÉNEMENTS
+   ════════════════════════════════════════════════════════════════════ */
+
+var state = {
+  ids: null,
+  format: 'standard',
+  language: 'fr',
+  showTranslit: true,
+  clientName: ''
+};
+
+function render() {
+  var wrap = document.getElementById('mandala-wrap');
+  if (!state.ids) {
+    wrap.innerHTML = '<div class="empty-state">' +
+      'Saisissez les 14 positions puis cliquez « Générer ».<br>' +
+      '<span style="font-size:0.9rem;">Le Cœur (2 Noms) et la Couronne (8 Noms) forment la version Standard.<br>' +
+      'Les 4 Portes complètent la version Deluxe.</span></div>';
+    document.getElementById('btn-svg').disabled = true;
+    document.getElementById('btn-png').disabled = true;
+    return;
+  }
+  var html = '';
+  html = '<div class="mandala-inner">';
+  if (state.clientName) {
+    html += '<div class="client-display">' + esc(state.clientName) + '</div>';
+  }
+  html += renderMandala(state.ids, state.format, state.clientName);
+  html += '</div>';
+  wrap.innerHTML = html;
+  document.getElementById('btn-svg').disabled = false;
+  document.getElementById('btn-png').disabled = false;
+  // Liaison hover sur chaque bloc Nom
+  wrap.querySelectorAll('.nom-block').forEach(function(g) {
+    g.addEventListener('mouseenter', function(evt) {
+      var idAttr = g.getAttribute('data-id');
+      if (!idAttr) return;
+      var id = parseInt(idAttr, 10);
+      var champ = g.getAttribute('data-champ');
+      showTooltip(evt, id, champ);
+    });
+    g.addEventListener('mousemove', positionTooltip);
+    g.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+function onGenerate() {
+  var res = collectInputs();
+  if (res.incomplete) {
+    if (!confirm('Certaines positions ne sont pas renseignées. Générer quand même le Mandala avec les Noms disponibles ?')) return;
+  }
+  state.ids = res.ids;
+  state.clientName = document.getElementById('client-name').value.trim();
+  render();
+}
+
+function onFormatToggle(evt) {
+  var btn = evt.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('.format-toggle button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.format = btn.dataset.format;
+  if (state.ids) render();
+}
+
+function onLangToggle(evt) {
+  var btn = evt.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('.lang-toggle button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.language = btn.dataset.lang;
+  if (state.ids) render();
+}
+
+function onTranslitToggle(evt) {
+  var btn = evt.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('.translit-toggle button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.showTranslit = (btn.dataset.translit === 'on');
+  if (state.ids) render();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   INITIALISATION
+   ════════════════════════════════════════════════════════════════════ */
 
 buildForm();
-// Le mandala sera dessiné après le calcul
+document.getElementById('btn-generate').addEventListener('click', onGenerate);
+document.querySelector('.format-toggle').addEventListener('click', onFormatToggle);
+document.querySelector('.lang-toggle').addEventListener('click', onLangToggle);
+document.querySelector('.translit-toggle').addEventListener('click', onTranslitToggle);
+document.getElementById('btn-svg').addEventListener('click', downloadSVG);
+document.getElementById('btn-png').addEventListener('click', downloadPNG);
 
+/* ════════════════════════════════════════════════════════════════════
+   PWA — Enregistrement du Service Worker + comportements tactiles
+   ════════════════════════════════════════════════════════════════════ */
+
+// Enregistrement du service worker (silencieux en cas d'échec — file:// ne
+// supporte pas les service workers, donc à ignorer en ouverture directe).
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(function(reg) {
+        console.log('[PWA] Service worker enregistré, scope :', reg.scope);
+      })
+      .catch(function(err) {
+        console.warn('[PWA] Échec du service worker :', err);
+      });
+  });
+}
+
+// Tooltip tactile : sur écrans tactiles, le hover ne fonctionne pas. On
+// active le tooltip au tap sur un bloc Nom, et on le ferme au tap ailleurs.
+(function setupTouchTooltip() {
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch) return;
+  document.addEventListener('click', function(e) {
+    var block = e.target.closest('.nom-block');
+    if (block) {
+      var id = parseInt(block.getAttribute('data-id') || '0', 10);
+      if (id) {
+        showTooltip({ clientX: e.clientX, clientY: e.clientY },
+                    id, block.getAttribute('data-champ') || '');
+        // Auto-fermeture après 3 secondes
+        clearTimeout(window._ttTimer);
+        window._ttTimer = setTimeout(hideTooltip, 3500);
+        e.stopPropagation();
+      }
+    } else {
+      hideTooltip();
+    }
+  });
+})();
+
+// Bouton « Produire un mandala-mantra aléatoire »
+document.getElementById('btn-random').addEventListener('click', function() {
+  // Tirage aléatoire : pour chacun des 14 champs, un signe (0-11) et une position (1-6)
+  for (var i = 0; i < 14; i++) {
+    var signeIdx = Math.floor(Math.random() * 12);
+    var pos      = Math.floor(Math.random() * 6) + 1;
+    document.querySelector('select[data-idx="' + i + '"][data-kind="signe"]').value = signeIdx;
+    document.querySelector('select[data-idx="' + i + '"][data-kind="pos"]').value = pos;
+  }
+  // Nom « Aléatoire » si aucun prénom n'a été saisi
+  var nameField = document.getElementById('client-name');
+  if (!nameField.value.trim()) nameField.value = 'Aléatoire';
+  // Enchaîner directement sur la génération visuelle
+  onGenerate();
+});
 </script>
+
 </body>
 </html>
