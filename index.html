@@ -772,6 +772,33 @@
     text-align: center;
     font-style: italic;
   }
+
+.field-mp{display:inline-block;min-width:2.6rem;color:#b07a2a;font-size:1.05rem;}
+.field-row.no-num{display:flex;align-items:center;gap:8px;}
+.qpos-input{flex:1;min-width:0;font:inherit;padding:6px 8px;border:1px solid #c9c2b5;border-radius:7px;background:#fff;}
+.qpos-input.ok{border-color:#3a7a3a;background:#f5fbf5;}
+.qpos-input.bad{border-color:#b3402f;background:#fdf6f5;}
+.qpos-preview{font-size:.72rem;color:#8a857c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:9rem;}
+.saisie-aide{margin-top:6px;font-size:.74rem;line-height:1.45;opacity:.95;}
+.mode-toggle{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.mode-toggle button{padding:8px 14px;border:none;background:transparent;color:var(--ink-2);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;cursor:pointer;transition:all 0.15s;}
+.mode-toggle button.active{background:var(--accent);color:white;}
+.transit-moment{margin:8px 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.transit-moment .moment-label{font-family:'Inter',sans-serif;font-size:.8rem;color:var(--ink-2);}
+.moment-toggle{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.moment-toggle button{padding:6px 12px;border:none;background:transparent;color:var(--ink-2);font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;}
+.moment-toggle button.active{background:var(--accent);color:white;}
+#moment-date{font:inherit;padding:5px 7px;border:1px solid var(--border);border-radius:6px;}
+.ephem-panel{margin:8px 0;padding:8px;border:1px dashed var(--border);border-radius:8px;}
+.ephem-label{font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;color:var(--ink-2);margin-bottom:6px;}
+.ephem-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.ephem-fields{display:flex;gap:6px;flex-wrap:wrap;}
+.ephem-fields input{font:inherit;padding:5px 6px;border:1px solid var(--border);border-radius:6px;width:92px;}
+.ephem-fields #ephem-date,.ephem-fields #ephem-time{width:auto;}
+.ephem-panel button{font:inherit;cursor:pointer;border:1px solid var(--accent);background:#fff;color:var(--accent);padding:5px 10px;border-radius:6px;}
+.ephem-panel .btn-calc{background:var(--accent);color:#fff;}
+#ephem-place{font:inherit;padding:5px 8px;border:1px solid var(--accent);border-radius:6px;background:#fff;color:var(--accent);max-width:170px;}
+.ephem-status{font-size:.74rem;color:var(--ink-2);margin-top:6px;min-height:1em;}
 </style>
 </head>
 <body>
@@ -782,7 +809,7 @@
     <div class="tagline">yatsav — Reboiser l'imaginaire</div>
   </div>
   <div class="tagline" style="text-align:right;">
-    V1 · Saisie manuelle<br>
+    V1 · Saisie manuelle · Export fiche<br>
     <span style="font-size:0.75rem;">Répertoire Shem72 v2.10.7</span>
   </div>
 </header>
@@ -792,8 +819,34 @@
   <aside class="form-panel">
     <h2>Saisie du ciel de naissance</h2>
     <div class="subtitle">Reportez ici les 14 positions lues sur l'image Astro Gold.</div>
+    <div class="subtitle saisie-aide">Tapez le <b>degré + signe</b> tel qu’affiché (ex. <b>16°Ar</b> ou <b>Ar 16</b>). Codes : Ar Ta Ge Cn Le Vi Li Sc Sg Cp Aq Pi. <b>Entrée</b> passe au champ suivant ; le segment de 5° est calculé automatiquement.</div>
 
     <input type="text" id="client-name" class="client-name-field" placeholder="Prénom / nom de la personne (optionnel)">
+    <div class="ephem-panel">
+      <div class="ephem-label">Calcul automatique (Swiss Ephemeris)</div>
+      <div class="ephem-row">
+        <button type="button" id="btn-now">Maintenant</button>
+        <select id="ephem-place" title="Lieux mémorisés"></select>
+        <button type="button" id="btn-calc" class="btn-calc">Calculer &amp; remplir</button>
+      </div>
+      <div class="ephem-fields">
+        <input type="date" id="ephem-date" title="Date">
+        <input type="time" id="ephem-time" title="Heure locale">
+        <input type="number" id="ephem-utc" step="0.5" placeholder="+UTC" title="Décalage vers UTC (Astro Gold : EDT = +4)">
+        <input type="number" id="ephem-lat" step="0.0001" placeholder="Latitude">
+        <input type="number" id="ephem-lon" step="0.0001" placeholder="Longitude">
+        <button type="button" id="btn-save-home" title="Enregistrer ce lieu comme domicile">★</button>
+      </div>
+      <div class="ephem-status" id="ephem-status"></div>
+    </div>
+    <div id="transit-moment" class="transit-moment" style="display:none;">
+      <span class="moment-label">Moment du ciel :</span>
+      <div class="moment-toggle" role="tablist">
+        <button class="active" type="button" data-moment="now">Maintenant</button>
+        <button type="button" data-moment="date">Une date</button>
+      </div>
+      <input type="date" id="moment-date" style="display:none;">
+    </div>
 
     <div class="section-label">Cœur</div>
     <div id="section-coeur"></div>
@@ -814,6 +867,10 @@
       <button class="btn-toggle-form" id="btn-toggle-form" title="Masquer / afficher le panneau de saisie">
         <span class="toggle-chevron">‹</span> <span class="toggle-label">Saisie</span>
       </button>
+      <div class="mode-toggle" role="tablist" title="Source des positions">
+        <button class="active" data-mode="midpoints">Mi-points</button>
+        <button data-mode="transits">Transits</button>
+      </div>
       <div class="format-toggle" role="tablist">
         <button class="active" data-format="standard">Standard · 10 Noms</button>
         <button data-format="deluxe">Deluxe · 14 Noms</button>
@@ -829,6 +886,8 @@
       <div class="export-controls">
         <button class="btn-export" id="btn-svg" disabled>⬇ SVG</button>
         <button class="btn-export" id="btn-png" disabled>⬇ PNG</button>
+        <button class="btn-export" id="btn-json" disabled title="Enregistrer la fiche pour la mémoire d'étude">⬇ Fiche JSON</button>
+        <select id="export-cat" class="export-cat" title="Catégorie pour la mémoire d'étude" style="font:inherit;margin-left:4px;padding:2px 4px;border-radius:6px;border:1px solid var(--gris,#ccc);"><option value="recherche">Recherche</option><option value="client">Client</option><option value="ami">Ami</option></select>
       </div>
     </div>
     <div class="mandala-wrap" id="mandala-wrap">
@@ -1041,31 +1100,64 @@ function currentTranslit(nom) {
    CONSTRUCTION DU FORMULAIRE
    ════════════════════════════════════════════════════════════════════ */
 
+var MIDPOINT_SYM = ['☉','☉/☽','☉/☿','☉/♀','☉/♂','☉/♃','☉/♄','☉/♅','☉/♆','☉/♇','☉/As','☉/☋','☉/Mc','☉/☊'];
+var TRANSIT_SYM = ['☉','☽','☿','♀','♂','♃','♄','♅','♆','♇','As','☋','Mc','☊'];
+var TRANSIT_LABELS = ['Soleil','Lune','Mercure','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton','Ascendant','Nœud Sud','MC','Nœud Nord'];
+var TRANSIT_LABELS_EN = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto','Ascendant','South Node','MC','North Node'];
+
+// Codes Astro Gold (2 lettres), noms FR et glyphes -> index 0-11
+var SIGN_LOOKUP = (function () {
+  var m = {};
+  var ag = ['Ar','Ta','Ge','Cn','Le','Vi','Li','Sc','Sg','Cp','Aq','Pi'];
+  ag.forEach(function (code, i) { m[code.toLowerCase()] = i; });
+  SIGNES.forEach(function (s, i) {
+    m[s.sym] = i;
+    m[s.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')] = i;
+  });
+  return m;
+})();
+
+// Analyse "degre + signe" (ordre libre, symboles deg/min/sec toleres) -> {signeIdx, deg, segment} ou null
+function parsePosition(raw) {
+  if (!raw) return null;
+  var t = String(raw).trim();
+  if (!t) return null;
+  var signeIdx = null;
+  var glyph = t.match(/[♈-♓]/);
+  if (glyph) signeIdx = SIGN_LOOKUP[glyph[0]];
+  if (signeIdx == null) {
+    var letters = t.normalize('NFD').replace(/[̀-ͯ]/g, '')
+                   .replace(/[^a-zA-Z]+/g, ' ').trim().toLowerCase();
+    var tok = letters.split(/\s+/)[0] || '';
+    if (SIGN_LOOKUP[tok] != null) signeIdx = SIGN_LOOKUP[tok];
+    else if (tok.length >= 2 && SIGN_LOOKUP[tok.slice(0, 2)] != null) signeIdx = SIGN_LOOKUP[tok.slice(0, 2)];
+  }
+  if (signeIdx == null) return null;
+  var mNum = t.match(/\d{1,2}/);
+  if (!mNum) return null;
+  var deg = parseInt(mNum[0], 10);
+  if (isNaN(deg) || deg < 0 || deg > 30) return null;
+  if (deg === 30) deg = 29;
+  var segment = Math.floor(deg / 5) + 1;
+  if (segment > 6) segment = 6;
+  return { signeIdx: signeIdx, deg: deg, segment: segment };
+}
+
 function buildForm() {
   var zones = {coeur: [], couronne: [], porte: []};
-  CHAMPS.forEach(function(c) { zones[c.zone].push(c); });
+  CHAMPS.forEach(function (c) { zones[c.zone].push(c); });
 
   function renderZone(containerId, list) {
     var html = '';
-    list.forEach(function(c) {
+    list.forEach(function (c) {
       html += '<div class="field-row">';
       html += '<span class="field-num">' + (c.idx + 1) + '</span>';
-      html += '<span class="field-label">' + c.label + '</span>';
-      html += '<div></div>';
+      html += '<span class="field-mp" title="Symbole">' + (state.mode === 'transits' ? TRANSIT_SYM[c.idx] : MIDPOINT_SYM[c.idx]) + '</span>';
+      html += '<span class="field-label">' + (state.mode === 'transits' ? TRANSIT_LABELS[c.idx] : c.label) + '</span>';
       html += '</div>';
       html += '<div class="field-row no-num">';
-      html += '<div class="double-select">';
-      html += '<select data-idx="' + c.idx + '" data-kind="signe">';
-      html += '<option value="">— Signe —</option>';
-      SIGNES.forEach(function(s, i) {
-        html += '<option value="' + i + '">' + s.sym + ' ' + s.nom + '</option>';
-      });
-      html += '</select>';
-      html += '<select data-idx="' + c.idx + '" data-kind="pos">';
-      html += '<option value="">—</option>';
-      for (var p = 1; p <= 6; p++) html += '<option value="' + p + '">' + p + '</option>';
-      html += '</select>';
-      html += '</div>';
+      html += '<input type="text" class="qpos-input" data-idx="' + c.idx + '" autocomplete="off" spellcheck="false" placeholder="ex. 16°Ar ou Ar 16">';
+      html += '<span class="qpos-preview" data-idx="' + c.idx + '">—</span>';
       html += '</div>';
     });
     document.getElementById(containerId).innerHTML = html;
@@ -1076,20 +1168,31 @@ function buildForm() {
   renderZone('section-portes', zones.porte);
 }
 
+// Apercu live d'un champ ; renvoie true si la position est valide.
+function updatePreview(inp) {
+  var idx = inp.getAttribute('data-idx');
+  var prev = document.querySelector('.qpos-preview[data-idx="' + idx + '"]');
+  if (!inp.value.trim()) { inp.classList.remove('ok', 'bad'); if (prev) prev.textContent = '—'; return false; }
+  var p = parsePosition(inp.value);
+  if (p) {
+    inp.classList.add('ok'); inp.classList.remove('bad');
+    var nom = getNom(posToId(p.signeIdx, p.segment));
+    if (prev) prev.textContent = SIGNES[p.signeIdx].sym + ' ' + p.deg + '° · seg ' + p.segment + (nom ? ' · ' + nom.translitFR : '');
+    return true;
+  }
+  inp.classList.add('bad'); inp.classList.remove('ok');
+  if (prev) prev.textContent = '?';
+  return false;
+}
+
 function collectInputs() {
   var ids = new Array(14).fill(null);
   var incomplete = false;
-  CHAMPS.forEach(function(c) {
-    var selS = document.querySelector('select[data-idx="' + c.idx + '"][data-kind="signe"]');
-    var selP = document.querySelector('select[data-idx="' + c.idx + '"][data-kind="pos"]');
-    var sIdx = selS.value === '' ? null : parseInt(selS.value, 10);
-    var pos  = selP.value === '' ? null : parseInt(selP.value, 10);
-    if (sIdx === null || pos === null) {
-      incomplete = true;
-      ids[c.idx] = null;
-    } else {
-      ids[c.idx] = posToId(sIdx, pos);
-    }
+  CHAMPS.forEach(function (c) {
+    var inp = document.querySelector('.qpos-input[data-idx="' + c.idx + '"]');
+    var p = inp ? parsePosition(inp.value) : null;
+    if (!p) { incomplete = true; ids[c.idx] = null; }
+    else ids[c.idx] = posToId(p.signeIdx, p.segment);
   });
   return {ids: ids, incomplete: incomplete};
 }
@@ -1134,8 +1237,8 @@ var PORTES_ORDER = [
 // Libellés du Cœur selon la langue
 // N1 = Soleil seul (point natal direct), N2 = milieu Soleil-Lune
 var COEUR_LABELS = {
-  fr: {soleil: 'SOLEIL', lune: 'SOLEIL-LUNE', bandTitle: 'Les quatre Portes'},
-  en: {soleil: 'SUN',    lune: 'SUN-MOON',    bandTitle: 'The four Gates'}
+  fr: {soleil: 'SOLEIL', lune: 'SOLEIL-LUNE', luneT: 'LUNE', bandTitle: 'Les quatre Portes'},
+  en: {soleil: 'SUN',    lune: 'SUN-MOON',    luneT: 'MOON', bandTitle: 'The four Gates'}
 };
 
 function polar(cx, cy, r, angleDeg) {
@@ -1250,7 +1353,9 @@ function renderCouronneItem(nom, layout) {
   var angleDeg   = layout.angle;
   var champLabel = CHAMPS[layout.idx].label;
   var posNum     = layout.idx + 1;     // numéro de place dans le mandala (1-14)
-  var planetLbl  = (state.language === 'en') ? layout.planetEN : layout.planetFR;
+  var planetLbl  = (state.mode === 'transits')
+    ? ((state.language === 'en') ? TRANSIT_LABELS_EN[layout.idx] : TRANSIT_LABELS[layout.idx]).toUpperCase()
+    : ((state.language === 'en') ? layout.planetEN : layout.planetFR);
   var combined   = 'N' + posNum + '. ' + planetLbl;
   var dataAttrs  = (nom ? 'data-id="' + nom.id + '"' : '') +
                    ' data-champ="' + esc(champLabel) + '"';
@@ -1280,7 +1385,7 @@ function renderCouronneItem(nom, layout) {
     while (cNorm <= -180) cNorm += 360;
     var bottomHalf = (cNorm > 0 && cNorm < 180);
     var rotID = bottomHalf ? (angleDeg - 90) : (angleDeg + 90);
-    var idText = nom.id + '-' + nom.seqNum;
+    var idText = nom.seqNum + '-' + nom.id;
     svg += '<text class="nom-id" x="' + ptID.x.toFixed(1) + '" y="' + ptID.y.toFixed(1) +
            '" text-anchor="middle" transform="rotate(' + rotID.toFixed(1) + ' ' +
            ptID.x.toFixed(1) + ' ' + ptID.y.toFixed(1) + ')">' + idText + '</text>';
@@ -1313,7 +1418,7 @@ function renderPorteItem(nom, cx, cy, champLabel, porteNum) {
   if (nom) {
     // X-Y (numéro Shem72 + numéro de séquence) entre le libellé et l'hébreu
     svg += '<text class="nom-id" x="' + cx + '" y="' + (cy + 24) + '" text-anchor="middle">' +
-           nom.id + '-' + nom.seqNum + '</text>';
+           nom.seqNum + '-' + nom.id + '</text>';
     svg += '<text class="vocalise porte-voc" x="' + cx + '" y="' + (cy + 54) + '" text-anchor="middle">' + nom.nomComplet + '</text>';
     var translitTxt = currentTranslit(nom);
     if (translitTxt) {
@@ -1473,7 +1578,7 @@ function renderMandala(ids, format, clientName) {
     if (nom) {
       // X-Y (numéro Shem72 + numéro de séquence) entre le libellé et l'hébreu — remonté
       s += '<text class="nom-id" x="' + cx + '" y="' + (cy - 36) + '" text-anchor="middle">' +
-           nom.id + '-' + nom.seqNum + '</text>';
+           nom.seqNum + '-' + nom.id + '</text>';
       s += '<text class="vocalise" x="' + cx + '" y="' + cy + '" text-anchor="middle">' + nom.nomComplet + '</text>';
       var translitTxt = currentTranslit(nom);
       if (translitTxt) {
@@ -1484,7 +1589,8 @@ function renderMandala(ids, format, clientName) {
     return s;
   }
   var coeurLbl = COEUR_LABELS[state.language] || COEUR_LABELS.fr;
-  svg += renderCoeurSide(coeur2, CENTER_X - dxCoeur, CENTER_Y, CHAMPS[1].label, 2, coeurLbl.lune);   // Lune à gauche
+  var luneLbl = (state.mode === 'transits') ? coeurLbl.luneT : coeurLbl.lune;
+  svg += renderCoeurSide(coeur2, CENTER_X - dxCoeur, CENTER_Y, CHAMPS[1].label, 2, luneLbl);   // Lune à gauche
   svg += renderCoeurSide(coeur1, CENTER_X + dxCoeur, CENTER_Y, CHAMPS[0].label, 1, coeurLbl.soleil); // Soleil à droite
 
   // ─── Couronne (Noms 3 à 10) ───
@@ -1687,11 +1793,142 @@ function buildFilename() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   EXPORT FICHE JSON — mémoire d'étude (schéma Yatsav v1.1)
+   ════════════════════════════════════════════════════════════════════ */
+
+var ZONE_FICHE = { coeur:'centre', couronne:'couronne', porte:'portes' };
+
+function astreEtCat(idx) {
+  if (idx === 0) return { astre:'Soleil', cat:'luminaire' };
+  if (idx === 1) return { astre:'Lune',   cat:'luminaire' };
+  if (idx >= 2 && idx <= 9) {
+    var planetes = ['Mercure','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'];
+    return { astre: planetes[idx - 2], cat:'planete' };
+  }
+  if (idx === 10) return { astre:'Ascendant',      cat:'axe' };
+  if (idx === 11) return { astre:'Nœud Sud',       cat:'noeud' };
+  if (idx === 12) return { astre:'Milieu du Ciel', cat:'axe' };
+  if (idx === 13) return { astre:'Nœud Nord',      cat:'noeud' };
+  return { astre:'', cat:'planete' };
+}
+
+var INTITULES_FICHE = {
+  1:'Soyez ce que vous êtes', 2:'La nuit du Soi', 3:'Le messager intérieur',
+  4:"L'accord intime", 5:'La force qui tranche', 6:"L'élargissement",
+  7:'Ce qui tient', 8:"L'éclair", 9:'Le seuil voilé', 10:'La métamorphose',
+  11:'Le seuil du visible', 12:'La mémoire ancienne', 13:"L'appel d'en haut",
+  14:'La direction qui vient'
+};
+
+function slugify(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'sans-nom';
+}
+
+var mmRandom = false;
+
+function buildMoment(today, nameRaw) {
+  var mm = state.momentMode || 'now';
+  var di = document.getElementById('moment-date');
+  var d = (mm === 'date' && di && di.value) ? di.value : today;
+  return { date: d, libelle: nameRaw || ('Ciel du ' + d + (mm === 'now' ? ' (maintenant)' : '')) };
+}
+
+function buildFicheJSON() {
+  if (!state.ids) return null;
+  var nb = (state.format === 'deluxe') ? 14 : 10;
+  var positions = [];
+  for (var i = 0; i < nb; i++) {
+    var champ = CHAMPS[i];
+    var id = state.ids[i];
+    var ac = astreEtCat(i);
+    var p = {
+      n: i + 1,
+      zone: ZONE_FICHE[champ.zone],
+      categorie_astre: ac.cat,
+      astre: ac.astre,
+      fonction: (state.mode === 'transits') ? TRANSIT_LABELS[i] : ((i === 0) ? 'Soleil' : 'Soleil et ' + ac.astre),
+      intitule: INTITULES_FICHE[i + 1] || ''
+    };
+    if (id) {
+      var nom = getNom(id);
+      p.nom_id = nom.id;
+      p.trigramme = nom.trigramme;
+      p.nom_5lettres = nom.nomComplet;
+      p.translitteration = nom.translitFR;
+      p.translit_en = nom.translitEN || '';
+      p.sequence_genese = nom.seqNum;
+      p.suffixe = nom.suffix;
+      p.saison = nom.saison;
+      p.natal = { signe: nom.signe.nom, segment: nom.pos, degres: nom.degres };
+      p.shem72 = { gematrie_trigramme: nom.gem, gematrie_avec_suffixe: nom.gemAvecSuffixe };
+    }
+    positions.push(p);
+  }
+  var nameRaw = (document.getElementById('client-name').value || '').trim();
+  var slug = slugify(nameRaw);
+  var today = new Date().toISOString().slice(0, 10);
+  var nowISO = new Date().toISOString();
+  var catEl = document.getElementById('export-cat');
+  var cat = (catEl && catEl.value) || 'recherche';
+  var tags = [];
+  if (mmRandom) {
+    var token = Math.random().toString(36).slice(2, 6);
+    if (slug === 'sans-nom') slug = 'aleatoire';
+    slug = slug + '-' + token;
+    tags = ['aléatoire'];
+  }
+  if (state.mode === 'transits') {
+    tags = tags.concat(['transit']);
+    if (slug === 'sans-nom') {
+      var diS = document.getElementById('moment-date');
+      var dS = (state.momentMode === 'date' && diS && diS.value) ? diS.value : today;
+      slug = 'ciel-' + dS;
+    }
+  }
+  return {
+    schema_version: '1.1',
+    mode: state.mode,
+    version_mandala: (nb === 14) ? '14-noms' : '10-noms',
+    id: 'mm_' + today + '_' + slug,
+    meta: {
+      categorie: cat,
+      tags: tags,
+      cree_le: nowISO,
+      derniere_maj: nowISO,
+      generateur_version: 'PWA · Répertoire Shem72 v2.10.7'
+    },
+    personne: {
+      prenom: nameRaw || 'Sans nom',
+      pseudonyme: slug,
+      confidentialite: 'sensible'
+    },
+    positions: positions,
+    annotations: { synthese: '', journal: [] },
+    moment: (state.mode === 'transits') ? buildMoment(today, nameRaw) : undefined
+  };
+}
+
+function downloadJSON() {
+  var fiche = buildFicheJSON();
+  if (!fiche) return;
+  var blob = new Blob([JSON.stringify(fiche, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = buildFilename() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+}
+
+/* ════════════════════════════════════════════════════════════════════
    ÉTAT & ÉVÉNEMENTS
    ════════════════════════════════════════════════════════════════════ */
 
 var state = {
   ids: null,
+  mode: 'midpoints',
+  momentMode: 'now',
   format: 'standard',
   language: 'fr',
   showTranslit: true,
@@ -1709,6 +1946,7 @@ function render() {
     rightPanel.innerHTML = '';
     document.getElementById('btn-svg').disabled = true;
     document.getElementById('btn-png').disabled = true;
+    document.getElementById('btn-json').disabled = true;
     return;
   }
   // Centre : client name (optionnel) + SVG du mandala
@@ -1723,6 +1961,7 @@ function render() {
   rightPanel.innerHTML = renderGemSummaryHTML(state.ids);
   document.getElementById('btn-svg').disabled = false;
   document.getElementById('btn-png').disabled = false;
+  document.getElementById('btn-json').disabled = false;
   // Liaison hover sur chaque bloc Nom (SVG seulement)
   center.querySelectorAll('.nom-block').forEach(function(g) {
     g.addEventListener('mouseenter', function(evt) {
@@ -1756,6 +1995,21 @@ function onFormatToggle(evt) {
   if (state.ids) render();
 }
 
+function onModeToggle(evt) {
+  var btn = evt.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('.mode-toggle button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.mode = btn.dataset.mode;
+  var tm = document.getElementById('transit-moment');
+  if (tm) tm.style.display = (state.mode === 'transits') ? '' : 'none';
+  var vals = {};
+  document.querySelectorAll('.qpos-input').forEach(function(i){ vals[i.getAttribute('data-idx')] = i.value; });
+  buildForm();
+  document.querySelectorAll('.qpos-input').forEach(function(i){ var v = vals[i.getAttribute('data-idx')]; if (v) { i.value = v; updatePreview(i); } });
+  if (state.ids) render();
+}
+
 function onLangToggle(evt) {
   var btn = evt.target.closest('button');
   if (!btn) return;
@@ -1779,16 +2033,36 @@ function onTranslitToggle(evt) {
    ════════════════════════════════════════════════════════════════════ */
 
 buildForm();
+(function () {
+  var panel = document.querySelector('.form-panel');
+  if (!panel) return;
+  panel.addEventListener('input', function (e) {
+    if (e.target.classList && e.target.classList.contains('qpos-input')) { mmRandom = false; updatePreview(e.target); }
+    if (e.target.id === 'client-name') mmRandom = false;
+  });
+  panel.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('qpos-input')) {
+      e.preventDefault();
+      updatePreview(e.target);
+      var inputs = [].slice.call(document.querySelectorAll('.qpos-input'));
+      var i = inputs.indexOf(e.target);
+      if (i >= 0 && i < inputs.length - 1) inputs[i + 1].focus();
+      else onGenerate();
+    }
+  });
+})();
 // Bascule masquer/afficher le panneau de saisie
 document.getElementById('btn-toggle-form').addEventListener('click', function() {
   document.querySelector('main').classList.toggle('form-hidden');
 });
 document.getElementById('btn-generate').addEventListener('click', onGenerate);
 document.querySelector('.format-toggle').addEventListener('click', onFormatToggle);
+document.querySelector('.mode-toggle').addEventListener('click', onModeToggle);
 document.querySelector('.lang-toggle').addEventListener('click', onLangToggle);
 document.querySelector('.translit-toggle').addEventListener('click', onTranslitToggle);
 document.getElementById('btn-svg').addEventListener('click', downloadSVG);
 document.getElementById('btn-png').addEventListener('click', downloadPNG);
+document.getElementById('btn-json').addEventListener('click', downloadJSON);
 
 /* ════════════════════════════════════════════════════════════════════
    PWA — Enregistrement du Service Worker + comportements tactiles
@@ -1832,21 +2106,105 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 })();
 
 // Bouton « Produire un mandala-mantra aléatoire »
-document.getElementById('btn-random').addEventListener('click', function() {
-  // Tirage aléatoire : pour chacun des 14 champs, un signe (0-11) et une position (1-6)
+(function () {
+  var mt = document.querySelector('.moment-toggle');
+  var di = document.getElementById('moment-date');
+  if (di) di.value = new Date().toISOString().slice(0, 10);
+  if (mt) mt.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    mt.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    state.momentMode = b.dataset.moment;
+    if (di) di.style.display = (state.momentMode === 'date') ? '' : 'none';
+  });
+})();
+
+(function () {
+  var d=document.getElementById('ephem-date'), t=document.getElementById('ephem-time'),
+      u=document.getElementById('ephem-utc'), la=document.getElementById('ephem-lat'),
+      lo=document.getElementById('ephem-lon'), st=document.getElementById('ephem-status');
+  if(!d) return;
+  var DEFAULT_PLACES=[
+    {name:'Montréal', lat:45.5019, lon:-73.5674, utc:5},
+    {name:'Glen Sutton (Estrie)', lat:45.05, lon:-72.57, utc:5}
+  ];
+  function getPlaces(){ var saved=[]; try{ saved=JSON.parse(localStorage.getItem('mm_places')||'[]')||[]; }catch(e){} return DEFAULT_PLACES.concat(saved); }
+  var sel=document.getElementById('ephem-place');
+  function refreshPlaces(selectName){ if(!sel)return; var places=getPlaces(); sel.innerHTML=''; places.forEach(function(p){ var o=document.createElement('option'); o.value=p.name; o.textContent=p.name; sel.appendChild(o); }); if(selectName) sel.value=selectName; }
+  function applyPlace(name){ var p=getPlaces().filter(function(x){return x.name===name;})[0]; if(p){ la.value=p.lat; lo.value=p.lon; u.value=p.utc; } return p; }
+  refreshPlaces('Montréal');
+  applyPlace(sel?sel.value:'Montréal');
+  if(sel) sel.addEventListener('change',function(){ var p=applyPlace(sel.value); if(p&&st)st.textContent='Lieu : '+p.name; });
+  var bn=document.getElementById('btn-now'); if(bn) bn.addEventListener('click',function(){ var now=new Date(); d.value=now.toISOString().slice(0,10); t.value=now.toTimeString().slice(0,5); u.value=(-now.getTimezoneOffset()/60); if(st)st.textContent='Réglé sur maintenant — cliquez « Calculer & remplir ».'; });
+  var bs=document.getElementById('btn-save-home'); if(bs) bs.addEventListener('click',function(){ var nm=prompt('Nom du lieu à mémoriser :'); if(!nm)return; try{ var saved=JSON.parse(localStorage.getItem('mm_places')||'[]')||[]; saved.push({name:nm,lat:parseFloat(la.value),lon:parseFloat(lo.value),utc:parseFloat(u.value)}); localStorage.setItem('mm_places',JSON.stringify(saved)); refreshPlaces(nm); if(st)st.textContent='Lieu « '+nm+' » mémorisé.'; }catch(e){ if(st)st.textContent='Stockage indisponible.'; } });
+  var bc=document.getElementById('btn-calc'); if(bc) bc.addEventListener('click',async function(){
+    if(!d.value){ if(st)st.textContent='Indiquez une date.'; return; }
+    var pa=d.value.split('-').map(Number), tm=(t.value||'00:00').split(':').map(Number);
+    var plus=parseFloat(u.value); if(isNaN(plus))plus=0;
+    var base=Date.UTC(pa[0],pa[1]-1,pa[2],tm[0],tm[1],0)+plus*3600000;
+    var ud=new Date(base);
+    var opts={year:ud.getUTCFullYear(),month:ud.getUTCMonth()+1,day:ud.getUTCDate(),hourUTC:ud.getUTCHours()+ud.getUTCMinutes()/60,lat:parseFloat(la.value),lo:parseFloat(lo.value),lon:parseFloat(lo.value)};
+    if(st)st.textContent='Calcul en cours…';
+    try{
+      if(!window.MMEphem){ if(st)st.textContent='Moteur non chargé. Servez l\'app en http (voir README), le WASM ne se charge pas en file://.'; return; }
+      await window.MMEphem.computeAndFill(opts);
+      if(st)st.textContent='Positions calculées et remplies' + (isFinite(opts.lat)&&isFinite(opts.lon)?'.':' (Portes Asc/MC ignorées : lieu manquant).');
+    }catch(e){
+      var msg='Erreur de calcul : '+((e&&e.message)||e);
+      try{
+        var uw=new URL('vendor/swisseph/wasm/swisseph.wasm', location.href).href;
+        var udd=new URL('vendor/swisseph/wasm/swisseph.data', location.href).href;
+        var rw=await fetch(uw,{method:'HEAD',cache:'no-store'});
+        var rd=await fetch(udd,{method:'HEAD',cache:'no-store'});
+        msg+=' | diagnostic : .wasm → HTTP '+rw.status+' ('+(rw.headers.get('content-type')||'?')+') ; .data → HTTP '+rd.status;
+      }catch(e2){
+        msg+=' | diagnostic : moteur injoignable ('+((e2&&e2.message)||e2)+') — l\'app est-elle servie en http depuis le dossier generateur ?';
+      }
+      if(st)st.textContent=msg;
+      if(window.console) console.error('MMEphem', e);
+    }
+  });
+})();
+
+document.getElementById('btn-random').addEventListener('click', function () {
+  var inputs = document.querySelectorAll('.qpos-input');
   for (var i = 0; i < 14; i++) {
     var signeIdx = Math.floor(Math.random() * 12);
-    var pos      = Math.floor(Math.random() * 6) + 1;
-    document.querySelector('select[data-idx="' + i + '"][data-kind="signe"]').value = signeIdx;
-    document.querySelector('select[data-idx="' + i + '"][data-kind="pos"]').value = pos;
+    var deg = Math.floor(Math.random() * 30);
+    if (inputs[i]) { inputs[i].value = SIGNES[signeIdx].sym + ' ' + deg; updatePreview(inputs[i]); }
   }
-  // Nom « Aléatoire » si aucun prénom n'a été saisi
   var nameField = document.getElementById('client-name');
   if (!nameField.value.trim()) nameField.value = 'Aléatoire';
-  // Enchaîner directement sur la génération visuelle
+  mmRandom = true;
   onGenerate();
 });
 </script>
 
+<script type="module">
+import SwissEph from './vendor/swisseph/src/swisseph.js';
+var swe=null, initPromise=null;
+function ensure(){ if(!initPromise){ initPromise=(async function(){ swe=new SwissEph(); await swe.initSwissEph(); })(); } return initPromise; }
+var SG=['Ar','Ta','Ge','Cn','Le','Vi','Li','Sc','Sg','Cp','Aq','Pi'];
+function code(l){ l=((l%360)+360)%360; return SG[Math.floor(l/30)]+String(Math.floor(l%30)).padStart(2,'0'); }
+function mid(a,b){ var d=((b-a)%360+360)%360, m=(a+d/2)%360; if(d>180)m=(m+180)%360; return m; }
+window.MMEphem = {
+  computeAndFill: async function(o){
+    await ensure();
+    var F=swe.SEFLG_SWIEPH|swe.SEFLG_SPEED;
+    var jd=swe.julday(o.year,o.month,o.day,o.hourUTC);
+    var L=function(b){ return swe.calc_ut(jd,b,F)[0]; };
+    var P={Sun:L(swe.SE_SUN),Moon:L(swe.SE_MOON),Mercury:L(swe.SE_MERCURY),Venus:L(swe.SE_VENUS),Mars:L(swe.SE_MARS),Jupiter:L(swe.SE_JUPITER),Saturn:L(swe.SE_SATURN),Uranus:L(swe.SE_URANUS),Neptune:L(swe.SE_NEPTUNE),Pluto:L(swe.SE_PLUTO)};
+    var NN=L(swe.SE_TRUE_NODE), SN=(NN+180)%360;
+    var hasLoc=isFinite(o.lat)&&isFinite(o.lon), Asc=null, MC=null;
+    if(hasLoc){ var H=swe.houses(jd,o.lat,o.lon,'P'); Asc=H.ascmc[0]; MC=H.ascmc[1]; }
+    var transit=(window.state&&window.state.mode==='transits');
+    var vals = transit
+      ? [P.Sun,P.Moon,P.Mercury,P.Venus,P.Mars,P.Jupiter,P.Saturn,P.Uranus,P.Neptune,P.Pluto,Asc,SN,MC,NN]
+      : [P.Sun,mid(P.Sun,P.Moon),mid(P.Sun,P.Mercury),mid(P.Sun,P.Venus),mid(P.Sun,P.Mars),mid(P.Sun,P.Jupiter),mid(P.Sun,P.Saturn),mid(P.Sun,P.Uranus),mid(P.Sun,P.Neptune),mid(P.Sun,P.Pluto),(Asc!=null?mid(P.Sun,Asc):null),mid(P.Sun,SN),(MC!=null?mid(P.Sun,MC):null),mid(P.Sun,NN)];
+    document.querySelectorAll('.qpos-input').forEach(function(inp){ var i=+inp.getAttribute('data-idx'); var v=vals[i]; if(v==null)return; inp.value=code(v); if(window.updatePreview)window.updatePreview(inp); });
+    if(window.onGenerate) window.onGenerate();
+  }
+};
+</script>
 </body>
 </html>

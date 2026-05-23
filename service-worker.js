@@ -4,7 +4,7 @@
    pour les fonts Google (fallback cache si hors-ligne).
    ════════════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'mandala-mantra-v1.0.0';
+const CACHE_VERSION = 'mandala-mantra-v1.1.2';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const FONTS_CACHE   = `${CACHE_VERSION}-fonts`;
 
@@ -30,6 +30,8 @@ const PRECACHE_URLS = [
   './icons/apple-splash-828-1792.png',
   './icons/apple-splash-750-1334.png'
 ];
+// Le moteur (vendor/swisseph/*) n'est PAS pré-caché : le .data fait 12 Mo et ferait
+// échouer l'installation du SW. Il est servi par le réseau (et caché à la demande par le navigateur).
 
 // ─── Installation : pré-cache des ressources statiques ─────────────────
 self.addEventListener('install', (event) => {

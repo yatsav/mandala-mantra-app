@@ -43,6 +43,16 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache')
         super().end_headers()
 
+    def guess_type(self, path):
+        p = str(path).lower()
+        if p.endswith('.wasm'):
+            return 'application/wasm'
+        if p.endswith('.data'):
+            return 'application/octet-stream'
+        if p.endswith('.mjs') or p.endswith('.js'):
+            return 'text/javascript'
+        return super().guess_type(path)
+
     def log_message(self, fmt, *args):
         # Log moins verbeux
         sys.stderr.write("[%s] %s\n" % (self.log_date_time_string(),
