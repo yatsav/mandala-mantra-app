@@ -832,7 +832,7 @@
       <div class="ephem-fields">
         <input type="date" id="ephem-date" title="Date">
         <input type="time" id="ephem-time" title="Heure locale">
-        <input type="number" id="ephem-utc" step="0.5" placeholder="Fuseau" title="Fuseau horaire signé, recopié tel quel d’Astro Gold (Montréal : EST = −5, EDT/été = −4)">
+        <input type="number" id="ephem-utc" step="0.5" placeholder="Fuseau" title="Recopiez le nombre de l’en-tête d’Astro Gold, tel quel (Montréal : +5 en hiver/EST, +4 en été/EDT)">
         <input type="number" id="ephem-lat" step="0.0001" placeholder="Latitude">
         <input type="number" id="ephem-lon" step="0.0001" placeholder="Longitude">
         <button type="button" id="btn-save-home" title="Enregistrer ce lieu comme domicile">★</button>
@@ -2124,10 +2124,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       u=document.getElementById('ephem-utc'), la=document.getElementById('ephem-lat'),
       lo=document.getElementById('ephem-lon'), st=document.getElementById('ephem-status');
   if(!d) return;
-  // Fuseau signé (comme Astro Gold) : heure locale = UTC + utc. Montréal : −5 (hiver/EST), −4 (été/EDT).
+  // Fuseau = heures à AJOUTER à l'heure locale pour obtenir UTC, comme l'en-tête d'Astro Gold. Montréal : +5 (hiver/EST), +4 (été/EDT).
   var DEFAULT_PLACES=[
-    {name:'Montréal', lat:45.5019, lon:-73.5674, utc:-5},
-    {name:'Glen Sutton (Estrie)', lat:45.05, lon:-72.57, utc:-5}
+    {name:'Montréal', lat:45.5019, lon:-73.5674, utc:5},
+    {name:'Glen Sutton (Estrie)', lat:45.05, lon:-72.57, utc:5}
   ];
   function getPlaces(){ var saved=[]; try{ saved=JSON.parse(localStorage.getItem('mm_places')||'[]')||[]; }catch(e){} return DEFAULT_PLACES.concat(saved); }
   var sel=document.getElementById('ephem-place');
@@ -2135,14 +2135,14 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   function applyPlace(name){ var p=getPlaces().filter(function(x){return x.name===name;})[0]; if(p){ la.value=p.lat; lo.value=p.lon; u.value=p.utc; } return p; }
   refreshPlaces('Montréal');
   applyPlace(sel?sel.value:'Montréal');
-  if(sel) sel.addEventListener('change',function(){ var p=applyPlace(sel.value); if(p&&st)st.textContent='Lieu : '+p.name+' (fuseau '+(p.utc>=0?'+':'')+p.utc+' — mettez −4 si date en heure d’été/EDT).'; });
-  var bn=document.getElementById('btn-now'); if(bn) bn.addEventListener('click',function(){ var now=new Date(); var pad=function(n){return String(n).padStart(2,'0');}; d.value=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()); t.value=pad(now.getHours())+':'+pad(now.getMinutes()); u.value=(-now.getTimezoneOffset()/60); if(st)st.textContent='Réglé sur maintenant — cliquez « Calculer & remplir ».'; });
+  if(sel) sel.addEventListener('change',function(){ var p=applyPlace(sel.value); if(p&&st)st.textContent='Lieu : '+p.name+' (fuseau +'+p.utc+' — mettez +4 si la date est en heure d’été/EDT).'; });
+  var bn=document.getElementById('btn-now'); if(bn) bn.addEventListener('click',function(){ var now=new Date(); var pad=function(n){return String(n).padStart(2,'0');}; d.value=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate()); t.value=pad(now.getHours())+':'+pad(now.getMinutes()); u.value=(now.getTimezoneOffset()/60); if(st)st.textContent='Réglé sur maintenant — cliquez « Calculer & remplir ».'; });
   var bs=document.getElementById('btn-save-home'); if(bs) bs.addEventListener('click',function(){ var nm=prompt('Nom du lieu à mémoriser :'); if(!nm)return; try{ var saved=JSON.parse(localStorage.getItem('mm_places')||'[]')||[]; saved.push({name:nm,lat:parseFloat(la.value),lon:parseFloat(lo.value),utc:parseFloat(u.value)}); localStorage.setItem('mm_places',JSON.stringify(saved)); refreshPlaces(nm); if(st)st.textContent='Lieu « '+nm+' » mémorisé.'; }catch(e){ if(st)st.textContent='Stockage indisponible.'; } });
   var bc=document.getElementById('btn-calc'); if(bc) bc.addEventListener('click',async function(){
     if(!d.value){ if(st)st.textContent='Indiquez une date.'; return; }
     var pa=d.value.split('-').map(Number), tm=(t.value||'00:00').split(':').map(Number);
-    var off=parseFloat(u.value); if(isNaN(off))off=0;            // fuseau signé : heure locale = UTC + off  →  UTC = locale − off
-    var base=Date.UTC(pa[0],pa[1]-1,pa[2],tm[0],tm[1],0)-off*3600000;
+    var off=parseFloat(u.value); if(isNaN(off))off=0;            // fuseau = heures à ajouter à local pour obtenir UTC (Astro Gold : EDT=+4) → UTC = locale + off
+    var base=Date.UTC(pa[0],pa[1]-1,pa[2],tm[0],tm[1],0)+off*3600000;
     var ud=new Date(base);
     var opts={year:ud.getUTCFullYear(),month:ud.getUTCMonth()+1,day:ud.getUTCDate(),hourUTC:ud.getUTCHours()+ud.getUTCMinutes()/60,lat:parseFloat(la.value),lo:parseFloat(lo.value),lon:parseFloat(lo.value)};
     if(st)st.textContent='Calcul en cours…';
