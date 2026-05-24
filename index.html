@@ -837,6 +837,7 @@
         <input type="number" id="ephem-lon" step="0.0001" placeholder="Longitude">
         <button type="button" id="btn-save-home" title="Enregistrer ce lieu comme domicile">★</button>
       </div>
+      <label class="ephem-topo" style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.74rem;color:var(--ink-2);cursor:pointer;"><input type="checkbox" id="ephem-topo" style="width:auto;margin:0;"> Lune topocentrique (parallaxe — comme Astro Gold en mode « Parallax »). Décoché = géocentrique.</label>
       <div class="ephem-status" id="ephem-status"></div>
     </div>
     <div id="transit-moment" class="transit-moment" style="display:none;">
@@ -2144,7 +2145,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var off=parseFloat(u.value); if(isNaN(off))off=0;            // fuseau = heures à ajouter à local pour obtenir UTC (Astro Gold : EDT=+4) → UTC = locale + off
     var base=Date.UTC(pa[0],pa[1]-1,pa[2],tm[0],tm[1],0)+off*3600000;
     var ud=new Date(base);
-    var opts={year:ud.getUTCFullYear(),month:ud.getUTCMonth()+1,day:ud.getUTCDate(),hourUTC:ud.getUTCHours()+ud.getUTCMinutes()/60,lat:parseFloat(la.value),lo:parseFloat(lo.value),lon:parseFloat(lo.value)};
+    var topoEl=document.getElementById('ephem-topo');
+    var opts={year:ud.getUTCFullYear(),month:ud.getUTCMonth()+1,day:ud.getUTCDate(),hourUTC:ud.getUTCHours()+ud.getUTCMinutes()/60,lat:parseFloat(la.value),lo:parseFloat(lo.value),lon:parseFloat(lo.value),topo:!!(topoEl&&topoEl.checked)};
     if(st)st.textContent='Calcul en cours…';
     try{
       if(!window.MMEphem){ if(st)st.textContent='Moteur non chargé. Servez l\'app en http (voir README), le WASM ne se charge pas en file://.'; return; }
@@ -2192,6 +2194,7 @@ window.MMEphem = {
   computeAndFill: async function(o){
     await ensure();
     var F=swe.SEFLG_SWIEPH|swe.SEFLG_SPEED;
+    if(o.topo && isFinite(o.lat) && isFinite(o.lon)){ swe.set_topo(o.lon,o.lat,0); F|=swe.SEFLG_TOPOCTR; }
     var jd=swe.julday(o.year,o.month,o.day,o.hourUTC);
     var L=function(b){ return swe.calc_ut(jd,b,F)[0]; };
     var P={Sun:L(swe.SE_SUN),Moon:L(swe.SE_MOON),Mercury:L(swe.SE_MERCURY),Venus:L(swe.SE_VENUS),Mars:L(swe.SE_MARS),Jupiter:L(swe.SE_JUPITER),Saturn:L(swe.SE_SATURN),Uranus:L(swe.SE_URANUS),Neptune:L(swe.SE_NEPTUNE),Pluto:L(swe.SE_PLUTO)};
