@@ -102,6 +102,19 @@
     color: var(--accent);
     letter-spacing: 0.02em;
   }
+  .nav-lien {
+    display: inline-block;
+    font-style: normal;
+    font-size: 0.82rem;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 3px 10px;
+    margin-bottom: 6px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-lien:hover { background: var(--accent); color: #fff; }
   header .tagline {
     font-style: italic;
     color: var(--ink-3);
@@ -809,6 +822,7 @@
     <div class="tagline">yatsav — Reboiser l'imaginaire</div>
   </div>
   <div class="tagline" style="text-align:right;">
+    <a href="bibliotheque-atelier.html" class="nav-lien" title="Ouvrir la Bibliothèque-Atelier (mémoire d'étude du corpus)">Bibliothèque-Atelier →</a><br>
     V1 · Saisie manuelle · Export fiche<br>
     <span style="font-size:0.75rem;">Répertoire Shem72 v2.10.7</span>
   </div>
@@ -887,9 +901,11 @@
       <div class="export-controls">
         <button class="btn-export" id="btn-svg" disabled>⬇ SVG</button>
         <button class="btn-export" id="btn-png" disabled>⬇ PNG</button>
-        <button class="btn-export" id="btn-json" disabled title="Enregistrer la fiche pour la mémoire d'étude">⬇ Fiche JSON</button>
+        <button class="btn-export" id="btn-json" disabled title="Télécharger la fiche .json">⬇ Fiche JSON</button>
+        <button class="btn-export" id="btn-corpus" disabled title="Écrire la fiche directement dans le dossier du corpus (clients/amis/recherche)">📁 Enregistrer dans le corpus</button>
         <select id="export-cat" class="export-cat" title="Catégorie pour la mémoire d'étude" style="font:inherit;margin-left:4px;padding:2px 4px;border-radius:6px;border:1px solid var(--gris,#ccc);"><option value="recherche">Recherche</option><option value="client">Client</option><option value="ami">Ami</option></select>
       </div>
+      <div id="corpus-status" class="ephem-status" style="margin-top:4px;"></div>
     </div>
     <div class="mandala-wrap" id="mandala-wrap">
       <div class="mandala-center" id="mandala-center">
@@ -1827,12 +1843,44 @@ function slugify(s) {
 }
 
 var mmRandom = false;
+var mmEphemUsed = false;   // vrai si les positions viennent du calcul Swiss Ephemeris
 
 function buildMoment(today, nameRaw) {
   var mm = state.momentMode || 'now';
   var di = document.getElementById('moment-date');
   var d = (mm === 'date' && di && di.value) ? di.value : today;
   return { date: d, libelle: nameRaw || ('Ciel du ' + d + (mm === 'now' ? ' (maintenant)' : '')) };
+}
+
+/* Lit les champs de l'éphéméride et construit le bloc « naissance » du schéma.
+   N'est appelé qu'en mode mi-points (identité) : en mode transits, la date est
+   un « moment », pas une naissance. Retourne undefined si aucune date saisie. */
+function buildNaissance() {
+  var dEl = document.getElementById('ephem-date');
+  var tEl = document.getElementById('ephem-time');
+  var uEl = document.getElementById('ephem-utc');
+  var laEl = document.getElementById('ephem-lat');
+  var loEl = document.getElementById('ephem-lon');
+  var plEl = document.getElementById('ephem-place');
+  var date = (dEl && dEl.value) ? dEl.value : '';
+  if (!date) return undefined;                       // pas de date → pas de bloc naissance
+  var heure = (tEl && /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(tEl.value)) ? tEl.value : '';
+  var n = { date: date, heure_connue: !!heure };
+  if (heure) n.heure = heure;
+  var lat = laEl ? parseFloat(laEl.value) : NaN;
+  var lon = loEl ? parseFloat(loEl.value) : NaN;
+  var off = uEl ? parseFloat(uEl.value) : NaN;
+  var nomLieu = (plEl && plEl.value) ? plEl.value : '';
+  var lieu = {};
+  if (nomLieu) lieu.nom = nomLieu;
+  if (isFinite(lat)) lieu.lat = lat;
+  if (isFinite(lon)) lieu.lon = lon;
+  if (isFinite(off)) {                                // off = heures à ajouter au local pour obtenir UTC ; décalage du fuseau = -off
+    var loc = -off;
+    lieu.fuseau = 'UTC' + (loc >= 0 ? '+' : '') + loc;
+  }
+  if (Object.keys(lieu).length) n.lieu = lieu;
+  return n;
 }
 
 function buildFicheJSON() {
@@ -1887,7 +1935,23 @@ function buildFicheJSON() {
       slug = 'ciel-' + dS;
     }
   }
-  return {
+  // Données natales : uniquement pour un mandala identitaire (mi-points), pas pour un transit (moment).
+  var naissance = (state.mode === 'midpoints') ? buildNaissance() : undefined;
+  var calcul;
+  if (state.mode === 'midpoints' && naissance) {
+    calcul = { methode: mmEphemUsed ? 'Swiss Ephemeris (SWIEPH)' : 'Saisie manuelle (Astro Gold)' };
+    if (state.ids && state.ids[0]) {
+      var n0 = getNom(state.ids[0]);           // N1 = Soleil → soleil_natal
+      if (n0 && n0.signe) {
+        // degres p.ex. « 10°15' » → ne garder que le degré entier dans le signe (0-29)
+        var m0 = String(n0.degres).match(/(\d+(?:\.\d+)?)/);
+        var deg0 = m0 ? parseFloat(m0[1]) : NaN;
+        calcul.soleil_natal = { signe: n0.signe.nom };
+        if (isFinite(deg0) && deg0 >= 0 && deg0 <= 30) calcul.soleil_natal.degre = deg0;
+      }
+    }
+  }
+  var fiche = {
     schema_version: '1.1',
     mode: state.mode,
     version_mandala: (nb === 14) ? '14-noms' : '10-noms',
@@ -1905,9 +1969,12 @@ function buildFicheJSON() {
       confidentialite: 'sensible'
     },
     positions: positions,
-    annotations: { synthese: '', journal: [] },
-    moment: (state.mode === 'transits') ? buildMoment(today, nameRaw) : undefined
+    annotations: { synthese: '', journal: [] }
   };
+  if (naissance) fiche.naissance = naissance;
+  if (calcul) fiche.calcul = calcul;
+  if (state.mode === 'transits') fiche.moment = buildMoment(today, nameRaw);
+  return fiche;
 }
 
 function downloadJSON() {
@@ -1920,6 +1987,52 @@ function downloadJSON() {
   a.download = buildFilename() + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+}
+
+/* ── Écriture directe dans le dossier du corpus (File System Access API) ──
+   Le handle du dossier racine est retenu pour la session. La fiche est
+   écrite dans le sous-dossier clients/ amis/ recherche selon la catégorie.
+   Secours : si l'API n'existe pas ou est refusée, on retombe sur le
+   téléchargement classique. */
+var corpusRootHandle = null;
+var CORPUS_DOSSIERS = { client: 'clients', ami: 'amis', recherche: 'recherche' };
+
+function corpusStatus(msg) {
+  var el = document.getElementById('corpus-status');
+  if (el) el.textContent = msg || '';
+}
+
+async function enregistrerDansCorpus() {
+  var fiche = buildFicheJSON();
+  if (!fiche) return;
+  if (!window.showDirectoryPicker) {
+    corpusStatus('Écriture directe non disponible sur ce navigateur — téléchargement à la place.');
+    downloadJSON();
+    return;
+  }
+  try {
+    if (!corpusRootHandle) {
+      corpusStatus('Choisissez le dossier racine du corpus…');
+      corpusRootHandle = await window.showDirectoryPicker({ id: 'mm-corpus', mode: 'readwrite' });
+    }
+    // S'assurer de la permission d'écriture.
+    if (corpusRootHandle.requestPermission) {
+      var perm = await corpusRootHandle.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') { corpusStatus('Permission d’écriture refusée.'); return; }
+    }
+    var sousDossier = CORPUS_DOSSIERS[fiche.meta.categorie] || 'recherche';
+    var dir = await corpusRootHandle.getDirectoryHandle(sousDossier, { create: true });
+    var nomFichier = buildFilename() + '.json';
+    var fh = await dir.getFileHandle(nomFichier, { create: true });
+    var w = await fh.createWritable();
+    await w.write(JSON.stringify(fiche, null, 2));
+    await w.close();
+    corpusStatus('Enregistré : ' + sousDossier + '/' + nomFichier);
+  } catch (e) {
+    if (e && e.name === 'AbortError') { corpusStatus('Enregistrement annulé.'); return; }
+    corpusStatus('Échec de l’écriture directe (' + ((e && e.message) || e) + ') — téléchargement à la place.');
+    downloadJSON();
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1948,6 +2061,7 @@ function render() {
     document.getElementById('btn-svg').disabled = true;
     document.getElementById('btn-png').disabled = true;
     document.getElementById('btn-json').disabled = true;
+    document.getElementById('btn-corpus').disabled = true;
     return;
   }
   // Centre : client name (optionnel) + SVG du mandala
@@ -1963,6 +2077,7 @@ function render() {
   document.getElementById('btn-svg').disabled = false;
   document.getElementById('btn-png').disabled = false;
   document.getElementById('btn-json').disabled = false;
+  document.getElementById('btn-corpus').disabled = false;
   // Liaison hover sur chaque bloc Nom (SVG seulement)
   center.querySelectorAll('.nom-block').forEach(function(g) {
     g.addEventListener('mouseenter', function(evt) {
@@ -2038,7 +2153,7 @@ buildForm();
   var panel = document.querySelector('.form-panel');
   if (!panel) return;
   panel.addEventListener('input', function (e) {
-    if (e.target.classList && e.target.classList.contains('qpos-input')) { mmRandom = false; updatePreview(e.target); }
+    if (e.target.classList && e.target.classList.contains('qpos-input')) { mmRandom = false; mmEphemUsed = false; updatePreview(e.target); }
     if (e.target.id === 'client-name') mmRandom = false;
   });
   panel.addEventListener('keydown', function (e) {
@@ -2064,6 +2179,7 @@ document.querySelector('.translit-toggle').addEventListener('click', onTranslitT
 document.getElementById('btn-svg').addEventListener('click', downloadSVG);
 document.getElementById('btn-png').addEventListener('click', downloadPNG);
 document.getElementById('btn-json').addEventListener('click', downloadJSON);
+document.getElementById('btn-corpus').addEventListener('click', enregistrerDansCorpus);
 
 /* ════════════════════════════════════════════════════════════════════
    PWA — Enregistrement du Service Worker + comportements tactiles
@@ -2179,6 +2295,7 @@ document.getElementById('btn-random').addEventListener('click', function () {
   var nameField = document.getElementById('client-name');
   if (!nameField.value.trim()) nameField.value = 'Aléatoire';
   mmRandom = true;
+  mmEphemUsed = false;
   onGenerate();
 });
 </script>
@@ -2206,6 +2323,7 @@ window.MMEphem = {
       ? [P.Sun,P.Moon,P.Mercury,P.Venus,P.Mars,P.Jupiter,P.Saturn,P.Uranus,P.Neptune,P.Pluto,Asc,SN,MC,NN]
       : [P.Sun,mid(P.Sun,P.Moon),mid(P.Sun,P.Mercury),mid(P.Sun,P.Venus),mid(P.Sun,P.Mars),mid(P.Sun,P.Jupiter),mid(P.Sun,P.Saturn),mid(P.Sun,P.Uranus),mid(P.Sun,P.Neptune),mid(P.Sun,P.Pluto),(Asc!=null?mid(P.Sun,Asc):null),mid(P.Sun,SN),(MC!=null?mid(P.Sun,MC):null),mid(P.Sun,NN)];
     document.querySelectorAll('.qpos-input').forEach(function(inp){ var i=+inp.getAttribute('data-idx'); var v=vals[i]; if(v==null)return; inp.value=code(v); if(window.updatePreview)window.updatePreview(inp); });
+    window.mmEphemUsed = true;   // positions issues du calcul Swiss Ephemeris → traçabilité dans la fiche
     if(window.onGenerate) window.onGenerate();
   }
 };

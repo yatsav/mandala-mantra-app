@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bibliothèque-Atelier — Mandala-mantra (Yatsav)</title>
+<style>
+  :root{
+    --bleu:#2563a8;
+    --bleu-clair:#eaf1f9;
+    --encre:#1a1a1a;
+    --gris:#cccccc;
+    --gris-doux:#e7e4df;
+    --papier:#fbfaf8;
+    --papier-2:#f3f0ea;
+    --texte-doux:#5a5650;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--encre); background:var(--papier);
+    font-size:15px; line-height:1.5;
+  }
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  /* En-tête Yatsav */
+  header.app{
+    display:flex; align-items:center; gap:20px;
+    padding:16px 24px; border-bottom:1px solid var(--gris-doux);
+    background:var(--papier);
+  }
+  .logo{font-family:Georgia,serif; font-style:italic; font-size:2.0em; font-weight:700; letter-spacing:-0.02em; color:var(--encre);}
+  .sep{width:1px; height:42px; background:var(--gris);}
+  .baseline{font-size:.95em; font-style:italic;}
+  .projet{margin-top:3px; font-size:1.05em; font-weight:700; color:var(--bleu); letter-spacing:.03em;}
+  header .actions{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;}
+  button{
+    font:inherit; cursor:pointer; border:1px solid var(--bleu);
+    background:#fff; color:var(--bleu); padding:7px 12px; border-radius:7px;
+    transition:background .12s,color .12s;
+  }
+  button:hover{background:var(--bleu); color:#fff;}
+  button.ghost{border-color:var(--gris); color:var(--texte-doux);}
+  button.ghost:hover{background:var(--papier-2); color:var(--encre);}
+  a.nav-lien{font:inherit; text-decoration:none; border:1px solid var(--bleu); background:#fff; color:var(--bleu); padding:7px 12px; border-radius:7px; transition:background .12s,color .12s; display:inline-block;}
+  a.nav-lien:hover{background:var(--bleu); color:#fff;}
+
+  .layout{display:flex; height:calc(100% - 75px); }
+  /* Panneau bibliothèque */
+  aside{
+    width:330px; min-width:280px; border-right:1px solid var(--gris-doux);
+    display:flex; flex-direction:column; background:var(--papier);
+  }
+  .biblio-top{padding:14px 16px; border-bottom:1px solid var(--gris-doux);}
+  .search{width:100%; padding:8px 10px; border:1px solid var(--gris); border-radius:7px; font:inherit;}
+  .filtres{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+  .chip{
+    font-size:.82em; padding:4px 10px; border-radius:999px; border:1px solid var(--gris);
+    background:#fff; cursor:pointer; color:var(--texte-doux); user-select:none;
+  }
+  .chip.on{background:var(--bleu); border-color:var(--bleu); color:#fff;}
+  .compte{font-size:.8em; color:var(--texte-doux); margin-top:10px;}
+  .liste{overflow:auto; flex:1;}
+  .item{
+    padding:11px 16px; border-bottom:1px solid var(--gris-doux); cursor:pointer;
+  }
+  .item:hover{background:var(--papier-2);}
+  .item.sel{background:var(--bleu-clair); border-left:3px solid var(--bleu); padding-left:13px;}
+  .item .nom{font-weight:600;}
+  .item .meta{font-size:.8em; color:var(--texte-doux); margin-top:2px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .badge{font-size:.72em; padding:1px 7px; border-radius:999px; background:var(--papier-2); border:1px solid var(--gris-doux); color:var(--texte-doux);}
+  .badge.cat-client{background:#eaf1f9; color:#2563a8; border-color:#cfe0f3;}
+  .badge.cat-ami{background:#eef6ee; color:#3a7a3a; border-color:#cfe6cf;}
+  .badge.cat-recherche{background:#f6f1e9; color:#8a6a2a; border-color:#e6dac3;}
+  .badge.v14{background:#f3ecf6; color:#7a3a8a; border-color:#e3cfe6;}
+
+  /* Vue détail */
+  main{flex:1; overflow:auto; padding:26px 32px;}
+  .vide{color:var(--texte-doux); max-width:560px; margin:8vh auto; text-align:center;}
+  .vide .logo-grand{font-family:Georgia,serif; font-style:italic; font-size:2.4em; color:var(--bleu); margin-bottom:8px;}
+  .fiche-titre{font-family:Georgia,serif; font-size:2em; margin:0;}
+  .fiche-natal{color:var(--texte-doux); margin:4px 0 0;}
+  .detail-grid{display:grid; grid-template-columns:minmax(360px,1fr) minmax(320px,440px); gap:30px; margin-top:18px; align-items:start;}
+  @media (max-width:980px){ .detail-grid{grid-template-columns:1fr;} }
+  .carte{border:1px solid var(--gris-doux); border-radius:12px; background:#fff; padding:18px;}
+  .carte h3{margin:0 0 10px; font-family:Georgia,serif; font-weight:700; font-size:1.1em;}
+  .note-portes{font-size:.78em; color:var(--texte-doux); margin-top:8px; font-style:italic;}
+
+  /* Mandala SVG */
+  .mandala-wrap{display:flex; justify-content:center;}
+  svg .anneau{fill:none; stroke:var(--gris-doux);}
+  svg .noeud circle{fill:#fff; stroke:var(--bleu); stroke-width:1.5; cursor:pointer; transition:fill .12s;}
+  svg .noeud:hover circle, svg .noeud.actif circle{fill:var(--bleu);}
+  svg .noeud:hover text.num, svg .noeud.actif text.num{fill:#fff;}
+  svg .noeud text.num{fill:var(--bleu); font-weight:700; font-size:13px; text-anchor:middle; dominant-baseline:central; pointer-events:none;}
+  svg .noeud text.lbl{fill:var(--texte-doux); font-size:10px; text-anchor:middle; pointer-events:none;}
+  svg .centre-disc{fill:var(--bleu-clair); stroke:var(--bleu); stroke-width:1.5;}
+  svg .zone-titre{fill:var(--texte-doux); font-size:10px; letter-spacing:.08em; text-anchor:middle; text-transform:uppercase;}
+
+  /* Mantra colonne */
+  .mantra{list-style:none; margin:0; padding:0;}
+  .mantra li{
+    display:flex; gap:12px; align-items:baseline; padding:10px 8px; border-radius:8px;
+    border-bottom:1px solid var(--gris-doux);
+  }
+  .mantra li:last-child{border-bottom:none;}
+  .mantra li.actif{background:var(--bleu-clair);}
+  .mantra .pastille{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%; background:var(--papier-2);
+    border:1px solid var(--gris); color:var(--bleu); font-weight:700; font-size:.82em;
+    display:flex; align-items:center; justify-content:center; align-self:center;
+  }
+  .mantra .corps{flex:1;}
+  .mantra .fonction{font-size:.8em; color:var(--texte-doux); text-transform:uppercase; letter-spacing:.04em;}
+  .mantra .intitule{font-family:Georgia,serif; font-style:italic; font-size:1.02em;}
+  .mantra .nom5{font-family:Georgia,serif; font-size:1.35em; color:var(--bleu); margin-top:2px;}
+  .mantra .translit{font-size:.85em; color:var(--texte-doux);}
+  .zone-sep{font-size:.74em; text-transform:uppercase; letter-spacing:.08em; color:var(--texte-doux); margin:14px 4px 4px;}
+  footer.app{padding:8px 24px; border-top:1px solid var(--gris-doux); font-size:.78em; color:var(--texte-doux); background:var(--papier);}
+  .annot-bar{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap;}
+  .tags-input{flex:1;min-width:180px;font:inherit;padding:6px 9px;border:1px solid var(--gris);border-radius:7px;}
+  .btn-save{font:inherit;cursor:pointer;border:1px solid var(--bleu);background:var(--bleu);color:#fff;padding:6px 14px;border-radius:7px;}
+  .btn-save:hover{background:#1e518c;}
+  .save-status{font-size:.8em;color:var(--texte-doux);}
+  .pos-note{display:block;width:100%;margin-top:6px;font:inherit;font-size:.85em;padding:5px 7px;border:1px solid var(--gris-doux);border-radius:6px;resize:vertical;background:#fffdf9;}
+  .pos-note:focus{border-color:var(--bleu);outline:none;}
+</style>
+</head>
+<body>
+<header class="app">
+  <span class="logo">yatsav</span>
+  <div class="sep"></div>
+  <div>
+    <div class="baseline">Reboiser l'imaginaire</div>
+    <div class="projet">Mandala-mantra · Bibliothèque-Atelier</div>
+  </div>
+  <div class="actions">
+    <a href="index.html" class="nav-lien" title="Ouvrir le Générateur de mandala-mantra">← Générateur</a>
+    <button id="btn-dossier">Ouvrir un dossier corpus</button>
+    <button id="btn-index" class="ghost">Survol du corpus</button>
+    <button id="btn-import" class="ghost">Importer des fiches .json</button>
+    <button id="btn-exemples" class="ghost">Recharger les exemples</button>
+    <input id="file-input" type="file" accept=".json,application/json" multiple hidden>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="biblio-top">
+      <input id="search" class="search" type="search" placeholder="Rechercher (nom, date, lieu, tag)…">
+      <div class="filtres" id="filtres"></div>
+      <div class="compte" id="compte"></div>
+    </div>
+    <div class="liste" id="liste"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<footer class="app">
+  Lecture seule (Phase 1). Les annotations, la comparaison et l'analyse trans-corpus viendront aux phases suivantes.
+  Données affichées : <span id="source-data">jeu d'exemples embarqué (fictif)</span>.
+</footer>
+
+<script>
+"use strict";
+
+/* ---------- Données d'exemple embarquées (mêmes que memoire/exemples) ---------- */
+const POINTS_10 = [
+  [1,"centre","luminaire","Soleil","Soleil","Soyez ce que vous êtes"],
+  [2,"centre","luminaire","Lune","Soleil et Lune","La nuit du Soi"],
+  [3,"couronne","planete","Mercure","Soleil et Mercure","Le messager intérieur"],
+  [4,"couronne","planete","Vénus","Soleil et Vénus","L'accord intime"],
+  [5,"couronne","planete","Mars","Soleil et Mars","La force qui tranche"],
+  [6,"couronne","planete","Jupiter","Soleil et Jupiter","L'élargissement"],
+  [7,"couronne","planete","Saturne","Soleil et Saturne","Ce qui tient"],
+  [8,"couronne","planete","Uranus","Soleil et Uranus","L'éclair"],
+  [9,"couronne","planete","Neptune","Soleil et Neptune","Le seuil voilé"],
+  [10,"couronne","planete","Pluton","Soleil et Pluton","La métamorphose"]
+];
+const POINTS_14_EXTRA = [
+  [11,"portes","axe","Ascendant","Soleil et Ascendant","Le seuil du visible"],
+  [12,"portes","noeud","Nœud Sud","Soleil et Nœud Sud","La mémoire ancienne"],
+  [13,"portes","axe","Milieu du Ciel","Soleil et Milieu du Ciel","L'appel d'en haut"],
+  [14,"portes","noeud","Nœud Nord","Soleil et Nœud Nord","La direction qui vient"]
+];
+function positions(nTotal){
+  const pts = POINTS_10.concat(nTotal===14 ? POINTS_14_EXTRA : []);
+  return pts.map(([n,zone,cat,astre,fonction,intitule])=>({
+    n, zone, categorie_astre:cat, astre, fonction, intitule,
+    trigramme:"⟨trigramme⟩",
+    nom_5lettres:"⟨nom-5l-N"+n+"⟩",
+    translitteration:"Exa"+String(n).padStart(2,"0")+"-"+(n%2?"El":"Yah"),
+    sequence_genese:0,
+    shem72:{formule:"",paire_active:"",richesse:""}
+  }));
+}
+function fiche(id,cat,prenom,nom,pseudo,date,heure,lieu,v){
+  v=v||"10-noms";
+  return {
+    schema_version:"1.0", version_mandala:v, id,
+    meta:{categorie:cat, tags:["exemple-fictif","phase0"], cree_le:"2026-05-23T15:00:00Z", derniere_maj:"2026-05-23T15:00:00Z", generateur_version:"à renseigner"},
+    personne:{prenom, nom, pseudonyme:pseudo, confidentialite:"sensible"},
+    naissance:{date, heure, heure_connue:true, lieu},
+    calcul:{methode:"midpoints solaires Yatsav", soleil_natal:{signe:"Poissons", degre:17.4}},
+    positions: positions(v==="14-noms"?14:10),
+    annotations:{synthese:"", journal:[{date:"2026-05-23", texte:"Fiche d'exemple Phase 0 — données fictives."}]}
+  };
+}
+function jeuExemples(){
+  return [
+    fiche("mm_2026-05-23_exemple-client","client","Exemple","Client","exemple-client","1971-03-08","06:15",{nom:"Montréal, QC",lat:45.5019,lon:-73.5674,fuseau:"America/Montreal"}),
+    fiche("mm_2026-05-23_exemple-ami","ami","Exemple","Ami","exemple-ami","1985-09-21","14:42",{nom:"Lyon, FR",lat:45.7640,lon:4.8357,fuseau:"Europe/Paris"}),
+    fiche("mm_2026-05-23_exemple-recherche","recherche","Exemple","Recherche","exemple-recherche","1960-01-01","00:00",{nom:"Jérusalem",lat:31.7683,lon:35.2137,fuseau:"Asia/Jerusalem"}),
+    fiche("mm_2026-05-23_exemple-14noms","recherche","Exemple","QuatorzeNoms","exemple-14noms","1992-07-04","09:30",{nom:"Québec, QC",lat:46.8139,lon:-71.2080,fuseau:"America/Toronto"},"14-noms")
+  ];
+}
+
+/* ---------- État ---------- */
+const CATS = ["client","ami","recherche"];
+const CAT_LABEL = {client:"Clients", ami:"Amis", recherche:"Recherche"};
+let state = { fiches: [], selectedId: null, q:"", cats:new Set(CATS), view:"detail" };
+let corpusDirHandle = null;   // handle du dossier racine du corpus (pour écrire _index.json)
+let fileHandles = {};
+
+/* ---------- Utilitaires ---------- */
+const $ = sel => document.querySelector(sel);
+function nomAffiche(f){
+  const p = f.personne || {};
+  const nom = [p.prenom, p.nom].filter(Boolean).join(" ").trim();
+  return nom || p.pseudonyme || f.id || "(sans nom)";
+}
+function valideFiche(o){
+  return o && typeof o==="object" && Array.isArray(o.positions)
+      && o.positions.length>=10 && o.personne;
+}
+
+/* ---------- Rendu : panneau bibliothèque ---------- */
+function renderFiltres(){
+  const c = $("#filtres"); c.innerHTML="";
+  CATS.forEach(cat=>{
+    const el=document.createElement("span");
+    el.className="chip"+(state.cats.has(cat)?" on":"");
+    el.textContent=CAT_LABEL[cat];
+    el.onclick=()=>{ state.cats.has(cat)?state.cats.delete(cat):state.cats.add(cat); renderFiltres(); renderListe(); };
+    c.appendChild(el);
+  });
+}
+function fichesFiltrees(){
+  const q=state.q.trim().toLowerCase();
+  return state.fiches.filter(f=>{
+    if(!state.cats.has((f.meta&&f.meta.categorie)||"recherche")) return false;
+    if(!q) return true;
+    const nat=f.naissance||{}; const lieu=(nat.lieu&&nat.lieu.nom)||"";
+    const hay=[nomAffiche(f), (f.personne&&f.personne.pseudonyme)||"", ((f.meta&&f.meta.tags)||[]).join(" "), nat.date||"", lieu].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+function renderListe(){
+  const list=fichesFiltrees();
+  $("#compte").textContent = list.length+" mandala"+(list.length>1?"s":"")+"-mantra"+(list.length>1?"s":"")+" sur "+state.fiches.length;
+  const c=$("#liste"); c.innerHTML="";
+  list.forEach(f=>{
+    const cat=(f.meta&&f.meta.categorie)||"recherche";
+    const v14 = f.version_mandala==="14-noms";
+    const el=document.createElement("div");
+    el.className="item"+(f.id===state.selectedId?" sel":"");
+    el.innerHTML =
+      '<div class="nom"></div>'+
+      '<div class="meta">'+
+        '<span class="badge cat-'+cat+'">'+CAT_LABEL[cat]+'</span>'+
+        '<span class="badge'+(v14?' v14':'')+'">'+(v14?'14 Noms':'10 Noms')+'</span>'+
+        '<span>'+((f.naissance&&f.naissance.date)||'')+'</span>'+
+      '</div>';
+    el.querySelector(".nom").textContent = nomAffiche(f);
+    el.onclick=()=>{ state.selectedId=f.id; renderListe(); renderDetail(); };
+    c.appendChild(el);
+  });
+}
+
+/* ---------- Rendu : mandala SVG ---------- */
+function pointXY(cx,cy,r,angleDeg){
+  const a=(angleDeg-90)*Math.PI/180; // 0deg = haut
+  return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+}
+function noeudSVG(p, x, y){
+  const lbl = p.translitteration || p.astre || ("N"+p.n);
+  return '<g class="noeud" data-n="'+p.n+'">'+
+    '<circle cx="'+x+'" cy="'+y+'" r="18"></circle>'+
+    '<text class="num" x="'+x+'" y="'+y+'">N'+p.n+'</text>'+
+    '<text class="lbl" x="'+x+'" y="'+(y+30)+'">'+escapeXml(lbl)+'</text>'+
+  '</g>';
+}
+function escapeXml(s){return String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));}
+function escapeAttr(s){return escapeXml(s).replace(/"/g,"&quot;");}
+
+function renderMandala(f){
+  const W=600,H=600,cx=300,cy=300;
+  const centre=f.positions.filter(p=>p.zone==="centre");
+  const couronne=f.positions.filter(p=>p.zone==="couronne");
+  const portes=f.positions.filter(p=>p.zone==="portes");
+  const rCouronne=185, rPortes=258, rDiscCentre=78;
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:560px">';
+  // anneaux
+  if(portes.length) svg+='<circle class="anneau" cx="'+cx+'" cy="'+cy+'" r="'+rPortes+'"></circle>';
+  svg+='<circle class="anneau" cx="'+cx+'" cy="'+cy+'" r="'+rCouronne+'"></circle>';
+  // disc central
+  svg+='<circle class="centre-disc" cx="'+cx+'" cy="'+cy+'" r="'+rDiscCentre+'"></circle>';
+  svg+='<text class="zone-titre" x="'+cx+'" y="'+(cy-rDiscCentre-8)+'">Centre</text>';
+  // Centre : N1 au-dessus, N2 en-dessous
+  if(centre[0]) svg+=noeudSVG(centre[0], cx, cy-22);
+  if(centre[1]) svg+=noeudSVG(centre[1], cx, cy+26);
+  // Couronne : réparties à partir du haut
+  couronne.forEach((p,i)=>{
+    const ang=(360/couronne.length)*i;
+    const [x,y]=pointXY(cx,cy,rCouronne,ang);
+    svg+=noeudSVG(p,x,y);
+  });
+  // Portes : quatre orients (provisoire — arbitrage [9.7])
+  if(portes.length){
+    // Ascendant à gauche, Milieu du Ciel en haut, autres aux orients restants
+    const orient={ "Ascendant":270, "Milieu du Ciel":0, "Nœud Nord":90, "Nœud Sud":180 };
+    portes.forEach((p,i)=>{
+      const ang = (p.astre in orient)? orient[p.astre] : (90*i);
+      const [x,y]=pointXY(cx,cy,rPortes,ang);
+      svg+=noeudSVG(p,x,y);
+    });
+    svg+='<text class="zone-titre" x="'+cx+'" y="'+(cy-rPortes-8)+'">les quatre Portes</text>';
+  }
+  svg+='</svg>';
+  return svg;
+}
+
+/* ---------- Rendu : mantra colonne ---------- */
+function ligneMantra(p){
+  return '<li data-n="'+p.n+'">'+
+    '<span class="pastille">N'+p.n+'</span>'+
+    '<div class="corps">'+
+      '<div class="fonction">'+escapeXml(p.fonction||p.astre||"")+'</div>'+
+      (p.intitule?'<div class="intitule">'+escapeXml(p.intitule)+'</div>':'')+
+      '<div class="nom5">'+escapeXml(p.nom_5lettres||"—")+'</div>'+
+      (p.translitteration?'<div class="translit">'+escapeXml(p.translitteration)+'</div>':'')+
+      '<textarea class="pos-note" data-n="'+p.n+'" rows="1" placeholder="Note d\'étude…">'+escapeXml(p.note||"")+'</textarea>'+
+    '</div>'+
+  '</li>';
+}
+function renderMantra(f){
+  const groupes=[["centre","Centre du mandala"],["couronne","Couronne du mantra"],["portes","les quatre Portes"]];
+  let html='<ul class="mantra">';
+  groupes.forEach(([z,titre])=>{
+    const ps=f.positions.filter(p=>p.zone===z);
+    if(!ps.length) return;
+    html+='<li class="zone-sep" style="border:none;padding:14px 4px 2px;display:block">'+titre+'</li>';
+    ps.forEach(p=>html+=ligneMantra(p));
+  });
+  html+='</ul>';
+  return html;
+}
+
+/* ---------- Rendu : vue détail ---------- */
+function renderDetail(){
+  const main=$("#main");
+  if(state.view==="index"){ renderIndexView(); return; }
+  const f=state.fiches.find(x=>x.id===state.selectedId);
+  if(!f){
+    main.innerHTML='<div class="vide">'+
+      '<div class="logo-grand">yatsav</div>'+
+      '<p>Sélectionnez un mandala-mantra dans la bibliothèque, ou ouvrez votre dossier corpus pour charger vos propres fiches.</p>'+
+      '<p style="font-size:.85em">Les données affichées par défaut sont un jeu d\'exemples fictif, destiné à montrer le rendu.</p>'+
+    '</div>';
+    return;
+  }
+  const nat=f.naissance||{}; const L=nat.lieu||{}; const lieu=L.nom||"";
+  const v14=f.version_mandala==="14-noms";
+  const estTransit = f.mode==="transits";
+  // Ligne principale : date · heure (ou « heure inconnue ») · lieu · version
+  const heureTxt = estTransit ? null : ((nat.heure_connue===false) ? "heure inconnue" : ((nat.heure_connue&&nat.heure)?nat.heure:null));
+  const datePrincipale = estTransit ? ((f.moment&&f.moment.date)||"") : (nat.date||"");
+  const natalLigne = escapeXml([datePrincipale, heureTxt, lieu].filter(Boolean).join(" · "))
+      + ' &nbsp;·&nbsp; ' + (v14?'version 14 Noms':'version 10 Noms')
+      + (estTransit ? ' &nbsp;·&nbsp; transit' : '');
+  // Ligne secondaire : coordonnées et fuseau, si présents
+  const coord=[];
+  if(typeof L.lat==="number") coord.push(L.lat.toFixed(4));
+  if(typeof L.lon==="number") coord.push(L.lon.toFixed(4));
+  let coordTxt = coord.length ? coord.join(", ") : "";
+  if(L.fuseau) coordTxt += (coordTxt?" · ":"")+L.fuseau;
+  main.innerHTML=
+    '<h1 class="fiche-titre">'+escapeXml(nomAffiche(f))+'</h1>'+
+    '<p class="fiche-natal">'+natalLigne+'</p>'+
+    (coordTxt? '<p class="fiche-natal" style="font-size:.78em;opacity:.8;margin-top:-4px;">'+escapeXml(coordTxt)+'</p>' : '')+
+    '<div class="annot-bar">'+
+      '<input id="tags-input" class="tags-input" placeholder="étiquettes, séparées par des virgules" value="'+escapeAttr(((f.meta&&f.meta.tags)||[]).join(", "))+'">'+
+      '<button id="btn-save-fiche" class="btn-save">Enregistrer</button>'+
+      '<span id="save-status" class="save-status"></span>'+
+    '</div>'+
+    '<div class="detail-grid">'+
+      '<div class="carte"><h3>Le mandala</h3><div class="mandala-wrap">'+renderMandala(f)+'</div>'+
+        (v14?'<div class="note-portes">Disposition des quatre Portes provisoire (arbitrage [9.7] de la stratégie).</div>':'')+
+      '</div>'+
+      '<div class="carte"><h3>Le mantra</h3>'+renderMantra(f)+'</div>'+
+    '</div>';
+  // liaison nœud <-> ligne
+  main.querySelectorAll(".noeud").forEach(g=>{
+    g.addEventListener("mouseenter",()=>surligne(g.dataset.n,true));
+    g.addEventListener("mouseleave",()=>surligne(g.dataset.n,false));
+    g.addEventListener("click",()=>{
+      const li=main.querySelector('.mantra li[data-n="'+g.dataset.n+'"]');
+      if(li) li.scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+  main.querySelectorAll(".mantra li[data-n]").forEach(li=>{
+    li.addEventListener("mouseenter",()=>surligne(li.dataset.n,true));
+    li.addEventListener("mouseleave",()=>surligne(li.dataset.n,false));
+  });
+  // Phase 2 : notes par position
+  main.querySelectorAll(".pos-note").forEach(ta=>{
+    ta.addEventListener("input",()=>{ const n=+ta.getAttribute("data-n"); const pos=f.positions.find(p=>p.n===n); if(pos) pos.note=ta.value; });
+  });
+  // étiquettes
+  const ti=main.querySelector("#tags-input");
+  if(ti) ti.addEventListener("input",()=>{ if(!f.meta)f.meta={}; f.meta.tags=ti.value.split(",").map(x=>x.trim()).filter(Boolean); });
+  // enregistrer
+  const sb=main.querySelector("#btn-save-fiche");
+  if(sb) sb.addEventListener("click",()=>enregistrerFiche(f));
+}
+
+async function enregistrerFiche(f){
+  const st=$("#save-status");
+  if(!f.meta) f.meta={};
+  f.meta.derniere_maj=new Date().toISOString();
+  const json=JSON.stringify(f,null,2);
+  const h=fileHandles[f.id];
+  if(h && h.createWritable){
+    try{ const w=await h.createWritable(); await w.write(json); await w.close();
+      if(st)st.textContent="Enregistré dans le corpus ✓"; renderListe(); ecrireIndex(); return;
+    }catch(e){ console.warn(e); if(st)st.textContent="Écriture refusée — export à la place."; }
+  }
+  const blob=new Blob([json],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url;
+  a.download=((f.personne&&f.personne.pseudonyme)||f.id||"fiche")+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+  if(st)st.textContent=(h?"":"(pas d'accès direct) ")+"Fiche exportée — à reclasser dans le corpus.";
+}
+function surligne(n,on){
+  const main=$("#main");
+  const g=main.querySelector('.noeud[data-n="'+n+'"]');
+  const li=main.querySelector('.mantra li[data-n="'+n+'"]');
+  if(g) g.classList.toggle("actif",on);
+  if(li) li.classList.toggle("actif",on);
+}
+
+/* ---------- Index du corpus (dérivé des fiches, jamais saisi) ---------- */
+function construireIndex(fiches){
+  return {
+    genere_le: new Date().toISOString(),
+    nombre: fiches.length,
+    personnes: fiches.map(f=>({
+      id: f.id,
+      pseudonyme: (f.personne&&f.personne.pseudonyme)||"",
+      prenom: (f.personne&&f.personne.prenom)||"",
+      nom: (f.personne&&f.personne.nom)||"",
+      categorie: (f.meta&&f.meta.categorie)||"recherche",
+      naissance: (f.naissance&&f.naissance.date)||"",
+      version_mandala: f.version_mandala||"",
+      mode: f.mode||"midpoints",
+      derniere_maj: (f.meta&&(f.meta.derniere_maj||f.meta.cree_le))||""
+    })).sort((a,b)=> (a.prenom||a.pseudonyme||"").localeCompare(b.prenom||b.pseudonyme||"", "fr"))
+  };
+}
+/* Régénère _index.json à la racine du dossier corpus (si on y a accès en écriture). */
+async function ecrireIndex(){
+  if(!corpusDirHandle || !corpusDirHandle.getFileHandle) return false;
+  try{
+    const idx=construireIndex(state.fiches);
+    const fh=await corpusDirHandle.getFileHandle("_index.json",{create:true});
+    const w=await fh.createWritable(); await w.write(JSON.stringify(idx,null,2)); await w.close();
+    return true;
+  }catch(e){ console.warn("Index non écrit :", e); return false; }
+}
+/* Vue « survol » : tableau de toutes les personnes du corpus. */
+function renderIndexView(){
+  const main=$("#main");
+  const idx=construireIndex(state.fiches);
+  let rows = idx.personnes.map(p=>
+    '<tr data-id="'+escapeAttr(p.id)+'" class="idx-row">'+
+      '<td>'+escapeXml(p.prenom||p.pseudonyme||"—")+(p.nom?(" "+escapeXml(p.nom)):"")+'</td>'+
+      '<td><span class="badge cat-'+p.categorie+'">'+(CAT_LABEL[p.categorie]||p.categorie)+'</span></td>'+
+      '<td>'+escapeXml(p.naissance||"—")+'</td>'+
+      '<td>'+(p.version_mandala==="14-noms"?"14 Noms":"10 Noms")+'</td>'+
+      '<td>'+(p.mode==="transits"?"transit":"mi-points")+'</td>'+
+    '</tr>'
+  ).join("");
+  main.innerHTML=
+    '<h1 class="fiche-titre">Survol du corpus</h1>'+
+    '<p class="fiche-natal">'+idx.nombre+' fiche'+(idx.nombre>1?'s':'')+' · index '+(corpusDirHandle?'régénéré dans le dossier (_index.json)':'(non enregistré — ouvrez un dossier corpus)')+'</p>'+
+    '<div class="carte" style="overflow:auto;">'+
+      '<table class="idx-table" style="width:100%;border-collapse:collapse;font-size:.9em;">'+
+        '<thead><tr style="text-align:left;border-bottom:2px solid var(--gris);">'+
+          '<th style="padding:6px 8px;">Personne</th><th style="padding:6px 8px;">Catégorie</th>'+
+          '<th style="padding:6px 8px;">Naissance</th><th style="padding:6px 8px;">Version</th><th style="padding:6px 8px;">Mode</th>'+
+        '</tr></thead>'+
+        '<tbody>'+(rows||'<tr><td colspan="5" style="padding:12px;opacity:.7;">Corpus vide.</td></tr>')+'</tbody>'+
+      '</table>'+
+    '</div>';
+  main.querySelectorAll(".idx-row").forEach(tr=>{
+    tr.style.cursor="pointer";
+    tr.addEventListener("mouseenter",()=>tr.style.background="var(--creme,#faf6ef)");
+    tr.addEventListener("mouseleave",()=>tr.style.background="");
+    tr.addEventListener("click",()=>{ state.selectedId=tr.dataset.id; state.view="detail"; renderListe(); renderDetail(); });
+  });
+}
+
+/* ---------- Chargement : exemples / import / dossier ---------- */
+function chargerFiches(arr, source){
+  fileHandles={};
+  corpusDirHandle=null;          // exemples / import ne sont pas un dossier corpus inscriptible
+  state.view="detail";
+  // déduplication par id
+  const vus=new Set();
+  state.fiches = arr.filter(f=>{ if(!f.id||vus.has(f.id))return !f.id; vus.add(f.id); return true; });
+  state.selectedId = state.fiches.length?state.fiches[0].id:null;
+  $("#source-data").textContent = source;
+  renderFiltres(); renderListe(); renderDetail();
+}
+function ajouterFiches(arr, source){
+  const parId=new Map(state.fiches.map(f=>[f.id,f]));
+  arr.forEach(f=>{ if(f && f.id) parId.set(f.id,f); });
+  state.fiches=[...parId.values()];
+  if(arr.length) state.selectedId=arr[0].id;
+  $("#source-data").textContent = source;
+  renderFiltres(); renderListe(); renderDetail();
+}
+async function lireFichier(file){
+  try{
+    const txt=await file.text();
+    const obj=JSON.parse(txt);
+    if(valideFiche(obj)) return obj;
+    console.warn("Fiche ignorée (format) :", file.name);
+  }catch(e){ console.warn("Lecture impossible :", file.name, e); }
+  return null;
+}
+async function importerFichiers(fileList){
+  const out=[];
+  for(const f of fileList){ const o=await lireFichier(f); if(o)out.push(o); }
+  if(out.length) ajouterFiches(out, out.length+" fiche(s) importée(s)");
+  else alert("Aucune fiche valide trouvée dans la sélection.");
+}
+async function ouvrirDossier(){
+  if(!window.showDirectoryPicker){
+    alert("L'ouverture directe d'un dossier requiert un navigateur Chromium (Chrome, Edge, Brave).\nUtilisez « Importer des fiches .json » dans les autres navigateurs.");
+    return;
+  }
+  try{
+    const dir=await window.showDirectoryPicker();
+    const out=[]; const hmap={};
+    async function parcourir(handle){
+      for await (const [name,h] of handle.entries()){
+        if(h.kind==="file" && name.toLowerCase().endsWith(".json") && name!=="_index.json" && name!=="schema.json"){
+          const file=await h.getFile(); const o=await lireFichier(file); if(o){ out.push(o); hmap[o.id]=h; }
+        }else if(h.kind==="directory"){ await parcourir(h); }
+      }
+    }
+    await parcourir(dir);
+    if(out.length){
+      chargerFiches(out, out.length+" fiche(s) — dossier « "+dir.name+" »");
+      fileHandles=hmap;
+      corpusDirHandle=dir;                 // retenu pour écrire _index.json
+      const ok=await ecrireIndex();        // index régénéré à l'ouverture (dérivé des fiches)
+      if(ok) $("#source-data").textContent = out.length+" fiche(s) — dossier « "+dir.name+" » · index régénéré";
+    }
+    else alert("Aucune fiche .json valide trouvée dans ce dossier.");
+  }catch(e){ if(e && e.name!=="AbortError") console.warn(e); }
+}
+
+/* ---------- Branchements ---------- */
+$("#search").addEventListener("input", e=>{ state.q=e.target.value; renderListe(); });
+$("#btn-exemples").addEventListener("click", ()=>chargerFiches(jeuExemples(), "jeu d'exemples embarqué (fictif)"));
+$("#btn-import").addEventListener("click", ()=>$("#file-input").click());
+$("#file-input").addEventListener("change", e=>{ importerFichiers(e.target.files); e.target.value=""; });
+$("#btn-dossier").addEventListener("click", ouvrirDossier);
+$("#btn-index").addEventListener("click", ()=>{ state.view = (state.view==="index")?"detail":"index"; renderDetail(); });
+
+/* ---------- Démarrage ---------- */
+chargerFiches(jeuExemples(), "jeu d'exemples embarqué (fictif)");
+</script>
+</body>
+</html>

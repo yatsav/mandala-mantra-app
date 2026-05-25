@@ -4,7 +4,7 @@
    pour les fonts Google (fallback cache si hors-ligne).
    ════════════════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'mandala-mantra-v1.1.2';
+const CACHE_VERSION = 'mandala-mantra-v1.1.3';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const FONTS_CACHE   = `${CACHE_VERSION}-fonts`;
 
